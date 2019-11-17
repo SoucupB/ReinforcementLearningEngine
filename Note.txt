@@ -1,0 +1,6 @@
+Observation for this agent!
+Games with low branching factor but hard strategies require more matches
+Games with high branching factor but easy strats require more agents to play against
+
+connect4 require about 3-4 agents but more batches in order to become stringer (aboud 1000 batches and 600 matches each)
+5x5 however dosen't do that good with only 4 agents for example

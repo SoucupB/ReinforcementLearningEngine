@@ -1,0 +1,7 @@
+Neural Net Configs
+
+This are the params which will need to be on the bot_o.assign_params function params in order to load them at start
+cgwiei {61, 61, 61}
+jdafmq {46, 52, 46}
+nevdoy {46, 52, 46}
+ztgxgy {46, 52, 46}

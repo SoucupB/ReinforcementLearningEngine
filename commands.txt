@@ -1,0 +1,1 @@
+python compiler.py game=5x5 command=play

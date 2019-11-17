@@ -1,0 +1,381 @@
+
+#undef UNICODE
+
+#define WIN32_LEAN_AND_MEAN
+
+#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+// Need to link with Ws2_32.lib
+#pragma comment (lib, "Ws2_32.lib")
+// #pragma comment (lib, "Mswsock.lib")
+
+#define DEFAULT_BUFLEN 512
+#define DEFAULT_PORT "27015"
+
+#include <iostream>
+#include "Components//BattleModel.h"
+#include <ctime>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+class State {
+public:
+  char game[10][10] = { {0, 0, 0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0, 0, 0} };
+  int turn = 0;
+  void show() {
+    for(int i = 0; i < 8; i++) {
+      for(int j = 0; j < 8; j++)
+        cout << (int)this->game[i][j] << " ";
+      cout << "\n";
+    }
+  }
+  vector<char> state_to_vec() {
+    vector<char> vecs;
+    for(int i = 0; i < 64; i++) {
+      vecs.push_back(game[i / 8][i % 8]);
+    }
+    return vecs;
+  }
+  int state_size() {
+    return 64;
+  }
+};
+
+class FirstAction {
+public:
+  int x, y, id;
+  void execute(State &state) {
+    if(state.game[this->y][this->x] == 0) {
+      state.turn++;
+      state.game[this->y][this->x] = this->id;
+    }
+  }
+  string stre() {
+    return "(" + to_string(this->y) + ", " + to_string(this->x) + ") ID: " + to_string(this->id);
+  }
+};
+
+class FirstPlayer {
+   int id = 1, MaxPoints = 50, MinPoints = -50, draw = 20;
+   public:
+      void execute_action(FirstAction action, State &state) {
+        action.execute(state);
+      }
+      vector<FirstAction> get_all_actions(State &state) {
+        vector<FirstAction> all_actions;
+        for(int i = 0; i < 8; i++) {
+          for(int j = 0; j < 8; j++) {
+            if(state.game[i][j] == 0) {
+              int plm[] = {0, 1, 0, -1, 1, 1, -1, -1, 0, 2, 0, -2, 2, 2, -2, -2};
+              int plt[] = {1, 0, -1, 0, -1, 1, -1, 1, 2, 0, -2, 0, -2, 2, -2, 2};
+              for(int p = 0; p < 8; p++) {
+                if(state.turn == 0 || (i + plm[p] >= 0 && i + plm[p] < 8 && j + plt[p] >= 0 && j + plt[p] < 8 && state.game[i + plm[p]][j + plt[p]])) {
+                  FirstAction action;
+                  action.y = i;
+                  action.x = j;
+                  action.id = this->id;
+                  all_actions.push_back(action);
+                  break;
+                }
+              }
+            }
+          }
+        }
+        return all_actions;
+      }
+      int get_max_score() {
+        return this->MaxPoints;
+      }
+      int get_min_score() {
+        return this->MinPoints;
+      }
+      int get_draw_score() {
+        return this->draw;
+      }
+      int get_final_evaluation_board(State &state) {
+        int k = 0;
+        char gridM[10][10];
+        for(int i = 0; i < 8; i++)
+          for(int j = 0; j < 8; j++)
+            gridM[i][j] = state.game[i][j];
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 4; j++) {
+                int ok = 1;
+                for(int p = j; p < j + 4; p++)
+                    if(gridM[i][p] != gridM[i][p + 1] || gridM[i][p] == 0)
+                        ok = 0;
+                if(ok) {
+                    if(gridM[i][j] == id)
+                        return MaxPoints;
+                    return MinPoints;
+                }
+            }
+        }
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 4; j++) {
+                int ok = 1;
+                for(int p = j; p < j + 4; p++)
+                    if(gridM[p][i] != gridM[p + 1][i] || gridM[p][i] == 0)
+                        ok = 0;
+                if(ok) {
+                    if(gridM[j][i] == id)
+                        return MaxPoints;
+                    return MinPoints;
+                }
+            }
+        }
+        for(int i = 0; i < 4; i++)
+            for(int j = 0; j < 4; j++) {
+                int ok = 1;
+                for(int p = 0; p < 4; p++)
+                    if(gridM[i + p][j + p] != gridM[i + p + 1][j + p + 1] || gridM[i + p][j + p] == 0)
+                        ok = 0;
+                if(ok) {
+                    if(gridM[i][j] == id)
+                        return MaxPoints;
+                    return MinPoints;
+                }
+            }
+        for(int i = 4; i < 8; i++)
+            for(int j = 0; j < 4; j++) {
+                int ok = 1;
+                for(int p = 0; p < 4; p++)
+                    if(gridM[i - p][j + p] != gridM[i - p - 1][j + p + 1] || gridM[i - p][j + p] == 0)
+                        ok = 0;
+                if(ok) {
+                    if(gridM[i][j] == id)
+                        return MaxPoints;
+                    return MinPoints;
+                }
+            }
+        for(int i = 0; i < 8; i++)
+          for(int j = 0; j < 8; j++)
+            if(!gridM[i][j])
+              return 0;
+        return 20;
+      }
+};
+
+class SecondPlayer {
+   int id = 2, MaxPoints = 50, MinPoints = -50, draw = 20;
+   public:
+      void execute_action(FirstAction action, State &state) {
+        action.execute(state);
+      }
+      vector<FirstAction> get_all_actions(State &state) {
+        vector<FirstAction> all_actions;
+        for(int i = 0; i < 8; i++) {
+          for(int j = 0; j < 8; j++) {
+            if(state.game[i][j] == 0) {
+              int plm[] = {0, 1, 0, -1, 1, 1, -1, -1, 0, 2, 0, -2, 2, 2, -2, -2};
+              int plt[] = {1, 0, -1, 0, -1, 1, -1, 1, 2, 0, -2, 0, -2, 2, -2, 2};
+              for(int p = 0; p < 8; p++) {
+                if(state.turn == 0 || (i + plm[p] >= 0 && i + plm[p] < 8 && j + plt[p] >= 0 && j + plt[p] < 8 && state.game[i + plm[p]][j + plt[p]])) {
+                  FirstAction action;
+                  action.y = i;
+                  action.x = j;
+                  action.id = this->id;
+                  all_actions.push_back(action);
+                  break;
+                }
+              }
+            }
+          }
+        }
+        return all_actions;
+      }
+      int get_max_score() {
+        return this->MaxPoints;
+      }
+      int get_min_score() {
+        return this->MinPoints;
+      }
+      int get_draw_score() {
+        return this->draw;
+      }
+      int get_final_evaluation_board(State &state) {
+        int k = 0;
+        char gridM[10][10];
+        for(int i = 0; i < 8; i++)
+          for(int j = 0; j < 8; j++)
+            gridM[i][j] = state.game[i][j];
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 4; j++) {
+                int ok = 1;
+                for(int p = j; p < j + 4; p++)
+                    if(gridM[i][p] != gridM[i][p + 1] || gridM[i][p] == 0)
+                        ok = 0;
+                if(ok) {
+                    if(gridM[i][j] == id)
+                        return MaxPoints;
+                    return MinPoints;
+                }
+            }
+        }
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 4; j++) {
+                int ok = 1;
+                for(int p = j; p < j + 4; p++)
+                    if(gridM[p][i] != gridM[p + 1][i] || gridM[p][i] == 0)
+                        ok = 0;
+                if(ok) {
+                    if(gridM[j][i] == id)
+                        return MaxPoints;
+                    return MinPoints;
+                }
+            }
+        }
+        for(int i = 0; i < 4; i++)
+            for(int j = 0; j < 4; j++) {
+                int ok = 1;
+                for(int p = 0; p < 4; p++)
+                    if(gridM[i + p][j + p] != gridM[i + p + 1][j + p + 1] || gridM[i + p][j + p] == 0)
+                        ok = 0;
+                if(ok) {
+                    if(gridM[i][j] == id)
+                        return MaxPoints;
+                    return MinPoints;
+                }
+            }
+        for(int i = 4; i < 8; i++)
+            for(int j = 0; j < 4; j++) {
+                int ok = 1;
+                for(int p = 0; p < 4; p++)
+                    if(gridM[i - p][j + p] != gridM[i - p - 1][j + p + 1] || gridM[i - p][j + p] == 0)
+                        ok = 0;
+                if(ok) {
+                    if(gridM[i][j] == id)
+                        return MaxPoints;
+                    return MinPoints;
+                }
+            }
+        for(int i = 0; i < 8; i++)
+          for(int j = 0; j < 8; j++)
+            if(!gridM[i][j])
+              return 0;
+        return 20;
+      }
+};
+
+
+void server() {
+    WSADATA WSAData;
+
+    SOCKET server, client;
+
+    SOCKADDR_IN serverAddr, clientAddr;
+
+    WSAStartup(MAKEWORD(2,0), &WSAData);
+    server = socket(AF_INET, SOCK_STREAM, 0);
+
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(5555);
+
+    bind(server, (SOCKADDR *)&serverAddr, sizeof(serverAddr));
+    listen(server, 0);
+
+    cout << "Listening for incoming connections..." << endl;
+
+    char buffer_recv[1024] = {0}, buffer_send[1024] = {0};
+    FirstPlayer ionica;
+    SecondPlayer vasile;
+    State state;
+    BattleModel<SecondPlayer, FirstPlayer, State, FirstAction, FirstAction> bot_o;
+    bot_o.activate_nn();
+    bot_o.assign_params(7, "lamar");
+    bot_o.set_timer(300);
+    //bot_o.get_file_from_zovrist();
+    // cout << bot_o.get_hash(state);
+    // exit(0);
+    bot_o.get_nn();
+    bot_o.get_bot();
+    const char *message = "Ana are pere";
+    int clientAddrSize = sizeof(clientAddr);
+    if((client = accept(server, (SOCKADDR *)&clientAddr, &clientAddrSize)) != INVALID_SOCKET)
+    {
+      cout << "Client connected!" << endl;
+      while(true) {
+        int flag = recv(client, buffer_recv, sizeof(buffer_recv), 0);
+        if(flag != -1) {
+          FirstAction serv_action;
+          serv_action.x = buffer_recv[0] - 48;
+          serv_action.y = buffer_recv[1] - 48;
+          serv_action.id = 1;
+          ionica.execute_action(serv_action, state);
+          //bot_o.save_state(state);
+          if(ionica.get_final_evaluation_board(state))
+          {
+           // bot_o.learn_from_match(state);
+            send(client, buffer_send, sizeof(buffer_send), 0);
+            state.show();
+            //bot_o.save_exp();
+            return ;
+          }
+          FirstAction action = bot_o.get_gradual_best_action(state);
+          char xx = (char)action.x;
+          char yy = (char)action.y;
+          buffer_send[0] = xx;
+          buffer_send[1] = yy;
+          vasile.execute_action(action, state);
+          bot_o.save_state(state);
+          if(vasile.get_final_evaluation_board(state))
+          {
+            //.bot_o.learn_from_match(state);
+            send(client, buffer_send, sizeof(buffer_send), 0);
+            state.show();
+            //bot_o.save_exp();
+            return ;
+          }
+          state.show();
+          cout << action.stre() << " States " << bot_o.debug_searched_states() << " Learned states: " << bot_o.debug_learned_states() << "\n";
+          send(client, buffer_send, sizeof(buffer_send), 0);
+        }
+        if(flag == 0)
+          break;
+      }
+
+      closesocket(client);
+      cout << "Client disconnected." << endl;
+    }
+}
+
+int main() {
+  srand(time(NULL));
+  // FirstPlayer ionica;
+  // SecondPlayer vasile;
+  // State state;
+  // // vector<FirstAction> all_actions = ionica.get_all_actions(state);
+  // // ionica.execute_action(all_actions[4], state);
+  // // state.show();
+  // BattleModel<FirstPlayer, SecondPlayer, State, FirstAction, FirstAction> bot_x;
+  // BattleModel<SecondPlayer, FirstPlayer, State, FirstAction, FirstAction> bot_o;
+  // std::cout << "Started\n";
+  // bot_o.assign_params(10, "andrei");
+ //  bot_o.get_bot();
+//   bot_o.train_nn_file();
+ //  bot_o.save_nn();
+ // BattleModel<FirstPlayer, SecondPlayer, State, FirstAction, FirstAction>::generate_bots(20000, 7, "FirstBots//", "SecondBots//", 14, 500, 9000, 3, 200);
+  // bot_o.generate_random_zovrist_sequence();
+ // bot_o.get_file_from_zovrist();
+  //server();
+  BattleModel<FirstPlayer, SecondPlayer, State, FirstAction, FirstAction>::train_example(1000, 5000, 70, "lamar");
+  // FirstAction action = bot_o.get_best_action(state);
+  // vasile.execute_action(action, state);
+  // state.show();
+  // cout << action.stre() << " States " << bot_o.debug_searched_states();
+  // cout << "\n";
+}
