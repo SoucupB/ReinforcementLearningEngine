@@ -17,7 +17,7 @@ There are currently 3 games implemented in this repository which can be tested.
 The hello world for everyone who wants to start developing game AI's, this is a classic game for testing and developing different algorithms such as searching or learning game-states.
 The command for testing the game is
 
-python start.py game=3x3 command=play bot_name=akmqag mode=hybrid
+    python start.py game=3x3 command=play bot_name=akmqag mode=hybrid
 
 (The commands will be explained later in this post)
 
@@ -25,7 +25,8 @@ python start.py game=3x3 command=play bot_name=akmqag mode=hybrid
 A slightly harder version of its classic 3x3 counterpart, this game is played on a 5 by 5 map where each player have the goal to make 4 pieces in line or diagonal
 
 The command for testing the game is
-python start.py game=5x5 command=play bot_name=aqpyiu mode=hybrid
+
+    python start.py game=5x5 command=play bot_name=aqpyiu mode=hybrid
 
 # Connect 4
 This is a game where developing an AI is significantly harder, since an early wrong move will cost you the game if the enemy can take advantege of it.
@@ -33,11 +34,12 @@ A simple alpha-beta minmax search is not gonna be very good in this situation he
 More details here!
 https://mindyourdecisions.com/blog/2013/08/20/how-to-win-at-connect-four-every-time-a-game-solver-you-can-use-from-your-smartphone-or-computer/
 
-python start.py game=connect4 command=play bot_name=jdafmq mode=hybrid
+    python start.py game=connect4 command=play bot_name=jdafmq mode=hybrid
 
 # TicTacToe 7x7
 Has not been trained yet, however it will update soon. For now its still available to play it (make five in a row column or diagonal).
-python start.py game=7x7 command=play
+
+    python start.py game=7x7 command=play
 
 # Options
     -command: "play, train" (this command starts the learning in 2 specific folders where the engine is putting its agents when they will be created, 1 folder is for the first player and the second for the second player, so far the learning has hardcoded parameters, however when the tutorial is released it will be editable from params or in a cfg file) The folders where the engine its putting its engine are in the "cfg" file
