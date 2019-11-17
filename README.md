@@ -68,3 +68,4 @@ Every new ideea or game that you want to add to use with this engine are welcome
 Right now on all the games the human player starts, next patch will include a posibility to let the bot start.
 More stronger trained bots for all the games are coming soon.
 More responsive UI and win/lose message will be implemented.
+Clean out some of the duplicate code or the code that do not make to much sense!
