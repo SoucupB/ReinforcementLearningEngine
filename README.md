@@ -5,9 +5,9 @@ Wether its winning a game or solving a problem, this bots can create strong and 
 
 # Getting Started
 In order to make this project run, there are 3 dependencies that need to be installed first.
-    Markup : * g++ > 8.1.0 (Can be aquired from this link https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/seh/)
-    Markup : * python > 3.5 (Can be aquired from this link https://www.python.org/downloads/release/python-354/ This python version was used to build the project's front-end part)
-    Markup : * PIL (This is a python graphic library and can be aquired by adding command "pip install Pillow" in any console after the python installation)
+    g++ > 8.1.0 (Can be aquired from this link https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/seh/)
+    python > 3.5 (Can be aquired from this link https://www.python.org/downloads/release/python-354/ This python version was used to build the project's front-end part)
+    PIL (This is a python graphic library and can be aquired by adding command "pip install Pillow" in any console after the python installation)
 gcc and python need to be added to enviroment variables.
 
 # Testing
