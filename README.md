@@ -6,7 +6,7 @@ Wether its winning a game or solving a problem, this bots can create strong and 
 In order to make this project run, there are 3 dependencies that need to be installed first.
     -g++ > 8.1.0 (Can be aquired from this link https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/seh/)
     -python > 3.5 (Can be aquired from this link https://www.python.org/downloads/release/python-354/ This python version was used to build the project's front-end part)
-    -PIL, Tkinter (This are python graphic library's. Which can be aquired by adding command "pip install Pillow" and "pip install python-tk" in any console)
+    -PIL (This is a python graphic library's. Which can be aquired by adding command "pip install Pillow" in any console after the python installation)
 gcc and python need to be added to enviroment variables.
 # Testing
 There are currently 3 games implemented in this repository which can be tested.
