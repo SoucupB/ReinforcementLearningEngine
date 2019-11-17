@@ -4,10 +4,10 @@ This is an engine which is made with the purpose of creating and testing bots th
 Wether its winning a game or solving a problem, this bots can create strong and sneaky strategies if enough training is provided, however to achieve perfection in case of some games is computationally impossible with my actual tools.
 
 # Getting Started
-In order to make this project run, there are 3 dependencies that need to be installed first.
     g++ > 8.1.0 (Can be aquired from this link https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/seh/)
     python > 3.5 (Can be aquired from this link https://www.python.org/downloads/release/python-354/ This python version was used to build the project's front-end part)
     PIL (This is a python graphic library and can be aquired by adding command "pip install Pillow" in any console after the python installation)
+In order to make this project run, this are the 3 dependencies that need to be installed first.
 gcc and python need to be added to enviroment variables.
 
 # Testing
@@ -61,7 +61,7 @@ My goal with this engine is to extend it and apply it on a variaty of games to t
 If you encoutered some bugs and want to fix them feel free to make a pull request with a specification of the fix or mention it in the comments.
 Every new ideea or game that you want to add to use with this engine are welcome to be added to the repository!
 
-# Notes
+# Overall Notes
 Right now on all the games the human player starts.
 More stronger trained bots for all the games are coming soon.
 More responsive UI and win/lose message will be implemented.
