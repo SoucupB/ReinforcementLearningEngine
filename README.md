@@ -63,7 +63,8 @@ My goal with this engine is to extend it and apply it on a variaty of games to t
 If you encoutered some bugs and want to fix them feel free to make a pull request with a specification of the fix or mention it in the comments.
 Every new ideea or game that you want to add to use with this engine are welcome to be added to the repository!
 
-# Overall Notes
-Right now on all the games the human player starts.
+# Target commits
+
+Right now on all the games the human player starts, next patch will include a posibility to let the bot start.
 More stronger trained bots for all the games are coming soon.
 More responsive UI and win/lose message will be implemented.
