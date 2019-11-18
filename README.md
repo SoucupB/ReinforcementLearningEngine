@@ -1,7 +1,7 @@
 # Reinforcement Learning Engine
 Reinforcement Learning Engine for different state-action board games.
-This is an engine which is made with the purpose of creating and testing bots that can take human-like decisions in order to acomplish their goal.
-Wether its winning a game or solving a problem, this bots can create strong and sneaky strategies if enough training is provided, however to achieve perfection in case of some games is computationally impossible with my actual tools.
+This is an engine which is made with the purpose of creating and testing bots that can take human-like decisions in order to accomplish their goal.
+Whether its winning a game or solving a problem, this bots can create strong and sneaky strategies if enough training is provided, however to achieve perfection for some games is computationally impossible with my actual tools.
 
 # Getting Started
     g++ > 8.1.0 (Can be aquired from this link https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/seh/)
@@ -60,8 +60,8 @@ My goal with this engine is to extend it and apply it on a variaty of games to t
 (Right now its supports only perfect-information no random chance board games with 2 opponents)
 
 # Contributions
-If you encoutered some bugs and want to fix them feel free to make a pull request with a specification of the fix or mention it in the comments.
-Every new ideea or game that you want to add to use with this engine are welcome to be added to the repository!
+If you encountered some bugs and want to fix them, feel free to make a pull request with a specification of the fix or mention it in the comments.
+Every new idea or game that you want to add to use with this engine are welcome to be added to the repository!
 
 # Target commits
 
