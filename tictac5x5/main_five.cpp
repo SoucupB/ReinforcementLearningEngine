@@ -19,7 +19,7 @@
 #include <ctime>
 #include <vector>
 #include <string>
-#include "tictactoe5x5.h"
+#include "Tictactoe5x5.h"
 
 using namespace std;
 
@@ -51,7 +51,7 @@ void server(string file_name, string path, string mode) {
       bot_o.hybrid_mode();
     else if(mode == "neural")
       bot_o.activate_nn();
-    bot_o.assign_params(5, path + file_name, {29, 29, 29}, 0.2);
+    bot_o.assign_params(5, path + file_name, {46, 46, 46}, 0.2);
     bot_o.get_bot();
     const char *message = "Ana are pere";
     int clientAddrSize = sizeof(clientAddr);
@@ -104,8 +104,8 @@ int main(int argc, char *argv[]) {
   if(argument == "train") {
     string first_folder = Utils::get_path_from_cfg("5x5_path_first_train");
     string second_folfer = Utils::get_path_from_cfg("5x5_path_second_train");
-    BattleModel<FirstPlayer, SecondPlayer, State, FirstAction, FirstAction>::tournament_learning(600, 5000, 1000, first_folder,
-                                                                                                second_folfer, 3, 6, 42000000, true, {46, 52, 46}, 0.01, false, 0.11, false);
+    BattleModel<FirstPlayer, SecondPlayer, State, FirstAction, FirstAction>::tournament_learning(600, 50000, 1000, first_folder,
+                                                                                                second_folfer, 3, 6, 42000000, true, {46, 46, 46}, 0.01, false, 0.11, false);
   }
   else {
     string mode = argv[2];

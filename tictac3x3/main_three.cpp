@@ -19,7 +19,7 @@
 #include <ctime>
 #include <vector>
 #include <string>
-#include "tictactoe3x3.h"
+#include "Tictactoe3x3.h"
 
 using namespace std;
 

@@ -15,11 +15,11 @@
 #define DEFAULT_PORT "27015"
 
 #include <iostream>
+#include "Connect4.h"
 #include "..//Components//BattleModel.h"
 #include <ctime>
 #include <vector>
 #include <string>
-#include "connect4.h"
 #include "..//Components//Utils.h"
 #include <fstream>
 #include <map>
@@ -55,7 +55,7 @@ void server(string file_name, string path, string mode) {
       bot_o.hybrid_mode();
     else if(mode == "neural")
       bot_o.activate_nn();
-    bot_o.assign_params(9, path + file_name, {46, 52, 46}, 0.2);
+    bot_o.assign_params(9, path + file_name, {76, 76, 76}, 0.2);
     bot_o.get_bot();
     //bot_o.activate_prototype_search("connect4//SecondBots//");
     int clientAddrSize = sizeof(clientAddr);
@@ -104,12 +104,12 @@ void server(string file_name, string path, string mode) {
 int main(int argc, char *argv[]) {
   srand(time(NULL));
   cout << "start\n";
-  string argument = argv[1];
+  string argument = "train";
   if(argument == "train") {
     string first_folder = Utils::get_path_from_cfg("connect4_train_first_bot_train");
     string second_folfer = Utils::get_path_from_cfg("connect4_train_second_bot_train");
-    BattleModel<FirstPlayer, SecondPlayer, State, FirstAction, FirstAction>::tournament_learning(600, 6000, 1000, first_folder,
-                                                                                                second_folfer, 3, 6, 42000000, true, {46, 52, 46}, 0.01, true, 0.11, false);
+    BattleModel<FirstPlayer, SecondPlayer, State, FirstAction, FirstAction>::tournament_learning(400, 60000, 1000, first_folder,
+                                                                                                second_folfer, 5, 6, 42000000, true, {76, 76, 76}, 0.01, false, 0.09, false);
   }
   else {
     string mode = argv[2];

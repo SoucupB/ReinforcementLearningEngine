@@ -19,7 +19,7 @@
 #include <ctime>
 #include <vector>
 #include <string>
-#include "tictactoe7x7.h"
+#include "Tictactoe7x7.h"
 
 using namespace std;
 
@@ -104,8 +104,8 @@ int main(int argc, char *argv[]) {
   if(argument == "train") {
     string first_folder = Utils::get_path_from_cfg("7x7_path_first_train");
     string second_folfer = Utils::get_path_from_cfg("7x7_path_second_train");
-    BattleModel<FirstPlayer, SecondPlayer, State, FirstAction, FirstAction>::tournament_learning(400, 5000, 50, first_folder,
-                                                                                                second_folfer, 3, 6, 42000000, true, {51, 52, 51}, 0.01, false, 0.11, false);
+    BattleModel<FirstPlayer, SecondPlayer, State, FirstAction, FirstAction>::tournament_learning(400, 50000, 500, first_folder,
+                                                                                                second_folfer, 5, 6, 42000000, true, {71, 71, 71}, 0.01, false, 0.11, false);
   }
   else {
     string mode = argv[2];
