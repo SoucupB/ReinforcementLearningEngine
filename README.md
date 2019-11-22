@@ -1,13 +1,13 @@
 # Reinforcement Learning Engine
 Reinforcement Learning Engine for different state-action board games.
-This is an engine which is made with the purpose of creating and testing bots that can take human-like decisions in order to acomplish their goal.
-Wether its winning a game or solving a problem, this bots can create strong and sneaky strategies if enough training is provided, however to achieve perfection in case of some games is computationally impossible with my actual tools.
+This is an engine which is made with the purpose of creating and testing bots that can take human-like decisions in order to accomplish their goal.
+Whether its winning a game or solving a problem, this bots can create strong and sneaky strategies if enough training is provided, however to achieve perfection for some games is computationally impossible with my actual tools.
 
 # Getting Started
-In order to make this project run, there are 3 dependencies that need to be installed first.
-    Markup : * g++ > 8.1.0 (Can be aquired from this link https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/seh/)
-    Markup : * python > 3.5 (Can be aquired from this link https://www.python.org/downloads/release/python-354/ This python version was used to build the project's front-end part)
-    Markup : * PIL (This is a python graphic library and can be aquired by adding command "pip install Pillow" in any console after the python installation)
+    g++ > 8.1.0 (Can be aquired from this link https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/seh/)
+    python > 3.5 (Can be aquired from this link https://www.python.org/downloads/release/python-354/ This python version was used to build the project's front-end part)
+    PIL (This is a python graphic library and can be aquired by adding command "pip install Pillow" in any console after the python installation)
+In order to make this project run, this are the 3 dependencies that need to be installed first.
 gcc and python need to be added to enviroment variables.
 
 # Testing
@@ -17,7 +17,7 @@ There are currently 3 games implemented in this repository which can be tested.
 The hello world for everyone who wants to start developing game AI's, this is a classic game for testing and developing different algorithms such as searching or learning game-states.
 The command for testing the game is
 
-python start.py game=3x3 command=play bot_name=akmqag mode=hybrid
+    python start.py game=3x3 command=play bot_name=akmqag mode=hybrid
 
 (The commands will be explained later in this post)
 
@@ -25,7 +25,8 @@ python start.py game=3x3 command=play bot_name=akmqag mode=hybrid
 A slightly harder version of its classic 3x3 counterpart, this game is played on a 5 by 5 map where each player have the goal to make 4 pieces in line or diagonal
 
 The command for testing the game is
-python start.py game=5x5 command=play bot_name=aqpyiu mode=hybrid
+
+    python start.py game=5x5 command=play bot_name=aqpyiu mode=hybrid
 
 # Connect 4
 This is a game where developing an AI is significantly harder, since an early wrong move will cost you the game if the enemy can take advantege of it.
@@ -33,11 +34,12 @@ A simple alpha-beta minmax search is not gonna be very good in this situation he
 More details here!
 https://mindyourdecisions.com/blog/2013/08/20/how-to-win-at-connect-four-every-time-a-game-solver-you-can-use-from-your-smartphone-or-computer/
 
-python start.py game=connect4 command=play bot_name=jdafmq mode=hybrid
+    python start.py game=connect4 command=play bot_name=jdafmq mode=hybrid
 
 # TicTacToe 7x7
 Has not been trained yet, however it will update soon. For now its still available to play it (make five in a row column or diagonal).
-python start.py game=7x7 command=play
+
+    python start.py game=7x7 command=play
 
 # Options
     -command: "play, train" (this command starts the learning in 2 specific folders where the engine is putting its agents when they will be created, 1 folder is for the first player and the second for the second player, so far the learning has hardcoded parameters, however when the tutorial is released it will be editable from params or in a cfg file) The folders where the engine its putting its engine are in the "cfg" file
@@ -58,10 +60,12 @@ My goal with this engine is to extend it and apply it on a variaty of games to t
 (Right now its supports only perfect-information no random chance board games with 2 opponents)
 
 # Contributions
-If you encoutered some bugs and want to fix them feel free to make a pull request with a specification of the fix or mention it in the comments.
-Every new ideea or game that you want to add to use with this engine are welcome to be added to the repository!
+If you encountered some bugs and want to fix them, feel free to make a pull request with a specification of the fix or mention it in the comments.
+Every new idea or game that you want to add to use with this engine are welcome to be added to the repository!
 
-# Notes
-Right now on all the games the human player starts.
+# Target commits
+
+Right now on all the games the human player starts, next patch will include a posibility to let the bot start.
 More stronger trained bots for all the games are coming soon.
 More responsive UI and win/lose message will be implemented.
+Clean out some of the duplicate code or the code that do not make to much sense!
