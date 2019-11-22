@@ -17,7 +17,8 @@ There are currently 3 games implemented in this repository which can be tested.
 The hello world for everyone who wants to start developing game AI's, this is a classic game for testing and developing different algorithms such as searching or learning game-states.
 The command for testing the game is
 
-    python start.py game=3x3 command=play bot_name=akmqag mode=hybrid
+    python start.py game=3x3 command=play bot_name=akmqag mode=hybrid player=first
+    python start.py game=3x3 command=play bot_name=akmqag mode=hybrid player=second
 
 (The commands will be explained later in this post)
 
@@ -26,7 +27,8 @@ A slightly harder version of its classic 3x3 counterpart, this game is played on
 
 The command for testing the game is
 
-    python start.py game=5x5 command=play bot_name=aqpyiu mode=hybrid
+    python start.py game=5x5 command=play bot_name=aqpyiu mode=hybrid player=first
+    python start.py game=5x5 command=play bot_name=aqpyiu mode=hybrid player=second
 
 # Connect 4
 This is a game where developing an AI is significantly harder, since an early wrong move will cost you the game if the enemy can take advantege of it.
@@ -34,21 +36,21 @@ A simple alpha-beta minmax search is not gonna be very good in this situation he
 More details here!
 https://mindyourdecisions.com/blog/2013/08/20/how-to-win-at-connect-four-every-time-a-game-solver-you-can-use-from-your-smartphone-or-computer/
 
-    python start.py game=connect4 command=play bot_name=jdafmq mode=hybrid
+    python start.py game=connect4 command=play bot_name=jdafmq mode=hybrid player=second
+    python start.py game=connect4 command=play bot_name=jdafmq mode=hybrid player=second
 
 # TicTacToe 7x7
 Has not been trained yet, however it will update soon. For now its still available to play it (make five in a row column or diagonal).
 
-    python start.py game=7x7 command=play
+    python start.py game=7x7 command=play player=first
+    python start.py game=7x7 command=play player=second
 
 # Options
     -command: "play, train" (this command starts the learning in 2 specific folders where the engine is putting its agents when they will be created, 1 folder is for the first player and the second for the second player, so far the learning has hardcoded parameters, however when the tutorial is released it will be editable from params or in a cfg file) The folders where the engine its putting its engine are in the "cfg" file
     -game: "3x3, 5x5, connect4, 7x7" this are the games available right now from this command
     -bot_name: This command is the name of the bot that will be loaded when the game starts, the bot name is also the file name, they can be found on ExampleBots
     -mode: "hybrid, neural" this are 2 mods for the bot to play, neural means that the bot loads only the neural network file (the file which finish with .nn) in order to generate its heuristics and hybrid means that it loads the neural_network file and the hash_table which is a transposition table for the same reason (more details in the upcoming tutorial).
-
-# Tutorial
-There will be an available tutorial in the near future that will explain the current learning methods used and the overall engine and how it works.
+    -player: "first, second" first means that you play as the player that starts the game, and second means that the bot start the game.
 
 # Compatibilty Systems
 Windows 7,8,8.1,10
@@ -65,7 +67,6 @@ Every new idea or game that you want to add to use with this engine are welcome 
 
 # Target commits
 
-Right now on all the games the human player starts, next patch will include a posibility to let the bot start.
 More stronger trained bots for all the games are coming soon.
 More responsive UI and win/lose message will be implemented.
 Clean out some of the duplicate code or the code that do not make to much sense!

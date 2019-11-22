@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import Tk, Canvas, Frame, BOTH, NW
 from PIL import Image, ImageTk
 import sys
+import time
+import select
 
 import socket
 TCP_IP = '127.0.0.1'
@@ -9,11 +11,8 @@ TCP_PORT = 5555
 BUFFER_SIZE = 1024
 MESSAGE = "".encode('UTF-8')
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((TCP_IP, TCP_PORT))
-
 class GraphicDesign():
-    def __init__(self, game=None, size=None, name=None):
+    def __init__(self, starter, game=None, size=None, name=None):
         if size != None:
             self.size = size
         self.name = name
@@ -26,6 +25,10 @@ class GraphicDesign():
         self.images = {}
         self.game = game
         self.game_map = []
+        self.player_turn = starter
+        self.current_turn = 0
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.connect((TCP_IP, TCP_PORT))
     def clasifyPieces(self, pieces):
         for piece in pieces:
             self.images[piece] = Image.open(piece.imagePath).resize((self.deltaY - 1, self.deltaX - 1))
@@ -49,7 +52,11 @@ class GraphicDesign():
         self.wind.title(self.name)
         self.setSize()
     def lastInstruction(self):
-        self.wind.mainloop()
+        while True:
+            self.wind.update_idletasks()
+            self.check_if_enemy_has_moved()
+            self.wind.update()
+            time.sleep(0.01)
     def createLine(self, x, y, xF, yF):
         self.canvas.create_line([(x, y), (xF, yF)], tag="grid_line")
     def getDivider(self, sizer, number):
@@ -70,19 +77,29 @@ class GraphicDesign():
     #FRONT END MOVES
     def check_if_there_is_element_in_table(self, x, y):
         return self.game_map[y][x] == 0
-    def getPosRelativeToCanvasO(self):
-        self.posX = self.posX // self.deltaY
-        self.posY = self.posY // self.deltaX
-        if self.game_name == "connect4" and not self.connect4_check_if_element_is_right_placed(self.posX, self.posY):
-            return
-        if self.check_if_there_is_element_in_table(self.posX, self.posY):
-            MESSAGE = (str(self.posX) + str(self.posY)).encode('UTF-8')
-            self.game_map[self.posY][self.posX] = 1
-            s.send(MESSAGE)
-            self.drawAt(self.posY, self.posX, self.images[4])
-            data = s.recv(BUFFER_SIZE)
+    def check_if_enemy_has_moved(self):
+        message_recieved = None
+        is_readable = [self.s]
+        is_writable = []
+        is_error = []
+        is_socket_full, w, e = select.select(is_readable, is_writable, is_error, 0.01)
+        if is_socket_full:
+            data = self.s.recv(BUFFER_SIZE)
             self.drawAt(data[1], data[0], self.images[5])
             self.game_map[data[1]][data[0]] = 1
+            self.current_turn = not self.current_turn
+    def getPosRelativeToCanvasO(self):
+        if self.player_turn == self.current_turn:
+            self.posX = self.posX // self.deltaY
+            self.posY = self.posY // self.deltaX
+            if self.game_name == "connect4" and not self.connect4_check_if_element_is_right_placed(self.posX, self.posY):
+                return
+            if self.check_if_there_is_element_in_table(self.posX, self.posY):
+                MESSAGE = (str(self.posX) + str(self.posY)).encode('UTF-8')
+                self.game_map[self.posY][self.posX] = 1
+                self.s.send(MESSAGE)
+                self.drawAt(self.posY, self.posX, self.images[4])
+                self.current_turn = not self.current_turn
     #FRONT END MOVES
     def getPosRelativeToCanvasX(self):
         self.posX = self.posX // self.deltaY
@@ -110,7 +127,16 @@ class GraphicDesign():
     def drawAt(self, x, y, img):
         self.canvas.create_image(y * self.deltaY + 1, x * self.deltaX + 1, anchor=NW, image=img)
 print("start")
-window = GraphicDesign(size = (530, 530), name = "BoardTool")
+
+if len(sys.argv) >= 3:
+    if sys.argv[2] == "first":
+        starter = 0
+    else:
+        starter = 1
+    print(starter)
+    window = GraphicDesign(starter, size = (530, 530), name = "BoardTool")
+else:
+    window = GraphicDesign(0, size = (530, 530), name = "BoardTool")
 window.createWindow()
 if sys.argv[1] == "5x5":
     window.createGrid(5, 5, "5x5")

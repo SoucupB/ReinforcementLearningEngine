@@ -23,7 +23,7 @@
 
 using namespace std;
 
-void server(string file_name, string path, string mode) {
+void server(string file_name, string path, string mode, bool player_start) {
     WSADATA WSAData;
 
     SOCKET server, client;
@@ -47,32 +47,67 @@ void server(string file_name, string path, string mode) {
     SecondPlayer second_player;
     State state;
     BattleModel<SecondPlayer, FirstPlayer, State, FirstAction, FirstAction> bot_o;
-    if(mode == "hybrid")
-      bot_o.hybrid_mode();
-    else if(mode == "neural")
-      bot_o.activate_nn();
-    bot_o.assign_params(2, path + file_name, {11, 11, 11}, 0.2);
-    bot_o.get_bot();
+    BattleModel<FirstPlayer, SecondPlayer, State, FirstAction, FirstAction> bot_x;
+    if(player_start) {
+      if(mode == "hybrid")
+        bot_o.hybrid_mode();
+      else if(mode == "neural")
+        bot_o.activate_nn();
+      bot_o.assign_params(2, path + file_name, {11, 11, 11}, 0.2);
+      bot_o.get_bot();
+    }
+
+    if(!player_start) {
+      if(mode == "hybrid")
+        bot_x.hybrid_mode();
+      else if(mode == "neural")
+        bot_x.activate_nn();
+      bot_x.assign_params(2, path + file_name, {11, 11, 11}, 0.2);
+      bot_x.get_bot();
+    }
    // bot_o.activate_prototype_search("tictac3x3//SecondBots//");
     int clientAddrSize = sizeof(clientAddr);
     if((client = accept(server, (SOCKADDR *)&clientAddr, &clientAddrSize)) != INVALID_SOCKET)
     {
       cout << "Client connected!" << endl;
-      while(true) {
-        int flag = recv(client, buffer_recv, sizeof(buffer_recv), 0);
-        if(flag != -1) {
-          FirstAction serv_action;
-          serv_action.x = buffer_recv[0] - 48;
-          serv_action.y = buffer_recv[1] - 48;
-          serv_action.id = 1;
-          first_player.execute_action(serv_action, state);
-          if(first_player.get_final_evaluation_board(state))
-          {
-            send(client, buffer_send, sizeof(buffer_send), 0);
+      if(player_start) {
+        while(true) {
+          int flag = recv(client, buffer_recv, sizeof(buffer_recv), 0);
+          if(flag != -1) {
+            FirstAction serv_action;
+            serv_action.x = buffer_recv[0] - 48;
+            serv_action.y = buffer_recv[1] - 48;
+            serv_action.id = 1;
+            first_player.execute_action(serv_action, state);
+            if(first_player.get_final_evaluation_board(state))
+            {
+              send(client, buffer_send, sizeof(buffer_send), 0);
+              state.show();
+              return ;
+            }
+            FirstAction action = bot_o.get_gradual_best_action(state);
+            char xx = (char)action.x;
+            char yy = (char)action.y;
+            buffer_send[0] = xx;
+            buffer_send[1] = yy;
+            second_player.execute_action(action, state);
+            if(second_player.get_final_evaluation_board(state))
+            {
+              send(client, buffer_send, sizeof(buffer_send), 0);
+              state.show();
+              return ;
+            }
             state.show();
-            return ;
+            cout << action.stre() << " Score " << bot_o.get_best_score() << "\n";
+            send(client, buffer_send, sizeof(buffer_send), 0);
           }
-          FirstAction action = bot_o.get_gradual_best_action(state);
+          if(flag == 0)
+            break;
+        }
+      }
+      else {
+        while(true) {
+          FirstAction action = bot_x.get_gradual_best_action(state);
           char xx = (char)action.x;
           char yy = (char)action.y;
           buffer_send[0] = xx;
@@ -85,11 +120,25 @@ void server(string file_name, string path, string mode) {
             return ;
           }
           state.show();
-          cout << action.stre() << " Score " << bot_o.get_best_score() << "\n";
           send(client, buffer_send, sizeof(buffer_send), 0);
+          cout << action.stre() << " Score " << bot_x.get_best_score() << "\n";
+          int flag = recv(client, buffer_recv, sizeof(buffer_recv), 0);
+          if(flag != -1) {
+            FirstAction serv_action;
+            serv_action.x = buffer_recv[0] - 48;
+            serv_action.y = buffer_recv[1] - 48;
+            serv_action.id = -1;
+            first_player.execute_action(serv_action, state);
+            if(first_player.get_final_evaluation_board(state))
+            {
+              send(client, buffer_send, sizeof(buffer_send), 0);
+              state.show();
+              return ;
+            }
+          }
+          if(flag == 0)
+            break;
         }
-        if(flag == 0)
-          break;
       }
 
       closesocket(client);
@@ -109,6 +158,11 @@ int main(int argc, char *argv[]) {
   }
   else {
     string mode = argv[2];
-    server(argument, Utils::get_path_from_cfg("3x3_path_play"), mode);
+    string player = argv[3];
+    bool starter = player == "first" ? 1 : 0;
+    if(starter)
+      server(argument, Utils::get_path_from_cfg("3x3_path_play_second"), mode, starter);
+    else
+      server(argument, Utils::get_path_from_cfg("3x3_path_play_first"), mode, starter);
   }
 }
