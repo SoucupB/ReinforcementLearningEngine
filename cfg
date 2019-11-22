@@ -1,7 +1,11 @@
-connect4_path_play=ExampleBots//connect4bot//Bots//
-3x3_path_play=ExampleBots//3x3bot//
-5x5_path_play=ExampleBots//5x5bot//
-7x7_path_play=ExampleBots//7x7bot//
+connect4_path_play_second=ExampleBots//connect4bot//
+connect4_path_play_first=ExampleBots//connect4bot//
+3x3_path_play_first=ExampleBots//3x3bot//
+3x3_path_play_second=ExampleBots//3x3bot//
+5x5_path_play_second=ExampleBots//5x5bot//
+5x5_path_play_first=ExampleBots//5x5bot//
+7x7_path_play_second=ExampleBots//7x7bot//
+7x7_path_play_first=ExampleBots//7x7bot//
 connect4_train_first_bot_train=connect4//FirstBots//
 connect4_train_second_bot_train=connect4//SecondBots//
 3x3_path_first_train=tictac3x3//FirstBots//

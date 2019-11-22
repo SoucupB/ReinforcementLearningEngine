@@ -27,8 +27,8 @@ A slightly harder version of its classic 3x3 counterpart, this game is played on
 
 The command for testing the game is
 
-    python start.py game=5x5 command=play bot_name=aqpyiu mode=hybrid player=first
-    python start.py game=5x5 command=play bot_name=aqpyiu mode=hybrid player=second
+    python start.py game=5x5 command=play bot_name=hecaqq mode=hybrid player=first
+    python start.py game=5x5 command=play bot_name=meymqa mode=hybrid player=second
 
 # Connect 4
 This is a game where developing an AI is significantly harder, since an early wrong move will cost you the game if the enemy can take advantege of it.
@@ -36,8 +36,8 @@ A simple alpha-beta minmax search is not gonna be very good in this situation he
 More details here!
 https://mindyourdecisions.com/blog/2013/08/20/how-to-win-at-connect-four-every-time-a-game-solver-you-can-use-from-your-smartphone-or-computer/
 
-    python start.py game=connect4 command=play bot_name=jdafmq mode=hybrid player=second
-    python start.py game=connect4 command=play bot_name=jdafmq mode=hybrid player=second
+    python start.py game=connect4 command=play bot_name=jdafmq mode=hybrid player=first
+    python start.py game=connect4 command=play bot_name=aaobga mode=hybrid player=second
 
 # TicTacToe 7x7
 Has not been trained yet, however it will update soon. For now its still available to play it (make five in a row column or diagonal).
@@ -67,6 +67,6 @@ Every new idea or game that you want to add to use with this engine are welcome 
 
 # Target commits
 
-More stronger trained bots for all the games are coming soon.
+More stronger trained bots for all the games are coming soon and maybe new strategy for training them.
 More responsive UI and win/lose message will be implemented.
 Clean out some of the duplicate code or the code that do not make to much sense!

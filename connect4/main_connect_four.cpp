@@ -57,7 +57,7 @@ void server(string file_name, string path, string mode, bool player_start) {
         bot_o.hybrid_mode();
       else if(mode == "neural")
         bot_o.activate_nn();
-      bot_o.assign_params(9, path + file_name, {76, 76, 76}, 0.2);
+      bot_o.assign_params(9, path + file_name, {71, 71, 71}, 0.2);
       bot_o.get_bot();
     }
 
