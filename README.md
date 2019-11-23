@@ -36,7 +36,7 @@ A simple alpha-beta minmax search is not gonna be very good in this situation he
 More details here!
 https://mindyourdecisions.com/blog/2013/08/20/how-to-win-at-connect-four-every-time-a-game-solver-you-can-use-from-your-smartphone-or-computer/
 
-    python start.py game=connect4 command=play bot_name=jdafmq mode=hybrid player=first
+    python start.py game=connect4 command=play bot_name=dzpzuk mode=hybrid player=first
     python start.py game=connect4 command=play bot_name=aaobga mode=hybrid player=second
 
 # TicTacToe 7x7
