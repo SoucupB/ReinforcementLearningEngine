@@ -146,6 +146,8 @@ if sys.argv[1] == "3x3":
     window.createGrid(3, 3, "3x3")
 if sys.argv[1] == "7x7":
     window.createGrid(7, 7, "7x7")
+if sys.argv[1] == "10x10":
+    window.createGrid(10, 10, "10x10")
 window.downloadFile("first.png", 4)
 window.downloadFile("second.png", 5)
 window.bind()

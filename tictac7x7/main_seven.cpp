@@ -53,7 +53,7 @@ void server(string file_name, string path, string mode, bool player_start) {
         bot_o.hybrid_mode();
       else if(mode == "neural")
         bot_o.activate_nn();
-      bot_o.assign_params(5, path + file_name, {51, 51, 51}, 0.2);
+      bot_o.assign_params(4, path + file_name, {62, 62, 62}, 0.2);
       bot_o.get_bot();
     }
 
@@ -62,7 +62,7 @@ void server(string file_name, string path, string mode, bool player_start) {
         bot_x.hybrid_mode();
       else if(mode == "neural")
         bot_x.activate_nn();
-      bot_x.assign_params(5, path + file_name, {51, 51, 51}, 0.2);
+      bot_x.assign_params(4, path + file_name, {62, 62, 62}, 0.2);
       bot_x.get_bot();
     }
    // bot_o.activate_prototype_search("tictac3x3//SecondBots//");
@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
     string first_folder = Utils::get_path_from_cfg("7x7_path_first_train");
     string second_folfer = Utils::get_path_from_cfg("7x7_path_second_train");
     BattleModel<FirstPlayer, SecondPlayer, State, FirstAction, FirstAction>::tournament_learning(400, 50000, 500, first_folder,
-                                                                                                second_folfer, 5, 6, 42000000, true, {71, 71, 71}, 0.01, false, 0.11, false);
+                                                                                                second_folfer, 5, 6, 42000000, true, {62, 62, 62}, 0.01, true, 0.11, false);
   }
   else {
     string mode = argv[2];

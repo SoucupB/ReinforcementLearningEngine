@@ -7,9 +7,9 @@ args_dict = {}
 for arg in sys.argv:
     args_dict[arg] = 1
 
-programs_to_run = {"5x5": "tictac5x5//main_five.cpp", "connect4": "connect4//main_connect_four.cpp", "3x3": "tictac3x3//main_three.cpp", "7x7": "tictac7x7//main_seven.cpp"}
+programs_to_run = {"5x5": "tictac5x5//main_five.cpp", "connect4": "connect4//main_connect_four.cpp", "3x3": "tictac3x3//main_three.cpp", "7x7": "tictac7x7//main_seven.cpp", "10x10": "tictac10x10//main_ten.cpp"}
 
-programs_to_compile = {"5x5": "tictac5x5//Tictactoe5x5.cpp", "connect4": "connect4//Connect4.cpp", "3x3": "tictac3x3//Tictactoe3x3.cpp", "7x7": "tictac7x7//Tictactoe7x7.cpp"}
+programs_to_compile = {"5x5": "tictac5x5//Tictactoe5x5.cpp", "connect4": "connect4//Connect4.cpp", "3x3": "tictac3x3//Tictactoe3x3.cpp", "7x7": "tictac7x7//Tictactoe7x7.cpp", "10x10": "tictac10x10//Tictactoe10x10.cpp"}
 
 default_values = {"game": "5x5", "command": "play", "bot_name": "aqpyiu", "mode": "hybrid", "program": "game", "player": "first"}
 
