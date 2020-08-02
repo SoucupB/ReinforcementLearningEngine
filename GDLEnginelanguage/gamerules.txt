@@ -1,0 +1,81 @@
+(init (cell 1 1 b))
+(init (cell 1 2 b))
+(init (cell 1 3 b))
+(init (cell 2 1 b))
+(init (cell 2 2 b))
+(init (cell 2 3 b))
+(init (cell 3 1 b))
+(init (cell 3 2 b))
+(init (cell 3 3 b))
+(init (control xplayer))
+
+
+(<= (legal ?w (mark ?x ?y))
+    (true (cell ?x ?y b))
+    (true (control ?w)))
+
+(<= (legal xplayer noop)
+    (true (control oplayer)))
+
+(<= (legal oplayer noop)
+    (true (control xplayer)))
+
+(<= (next (cell ?m ?n x))
+    (does xplayer (mark ?m ?n))
+    (true (cell ?m ?n b)))
+
+(<= (next (cell ?m ?n o))
+    (does oplayer (mark ?m ?n))
+    (true (cell ?m ?n b)))
+
+(<= (next (cell ?m ?n ?w))
+    (true (cell ?m ?n ?w))
+    (distinct ?w b))
+
+
+(<= (next (cell ?m ?n b))
+    (does ?w (mark ?j ?k))
+    (true (cell ?m ?n b))
+    (or (distinct ?m ?j)
+        (distinct ?n ?k)))
+
+(<= (next (control xplayer))
+    (true (control oplayer)))
+
+(<= (next (control oplayer))
+    (true (control xplayer)))
+
+
+
+init predicate(...arguments...)
+
+variables...
+
+actions...
+
+actions + predicates => predicates'
+
+goals...
+
+role(xplayer)
+role(oplayer)
+
+init(cell(1, 1, b))
+init(cell(1, 2, b))
+init(cell(1, 3, b))
+init(cell(2, 1, b))
+init(cell(2, 2, b))
+init(cell(2, 3, b))
+init(cell(3, 1, b))
+init(cell(3, 2, b))
+init(cell(3, 3, b))
+
+legal(xplayer, mark(X,Y)) :- true(cell(X,Y,b)) & true(control(W))
+
+//next(cell(A, B, x)) :- does(xplayer, mark(A, B)) & true(cell(A, B, b))
+//next(cell(A, B, o)) :- does(oplayer, mark(A, B)) & true(cell(A, B, b))
+
+does(xplayer, mark(A, B)) :- next(cell(A, B, x))
+
+
+action(xplayer, mark(1, 1))
