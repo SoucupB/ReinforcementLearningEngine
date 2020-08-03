@@ -11,6 +11,9 @@ init(cell(3, 1, b))
 init(cell(3, 2, b))
 init(cell(3, 3, b))
 
-legal(xplayer, mark(X, Y)) :- true(cell(X, Y, b)) & true(control(W))
+legal(xplayer, mark(X, Y)) :- true(cell(X, Y, b))
 
-does(xplayer, mark(A, B)) :- next(cell(A, B, x))
+does(xplayer, mark(A, B)) :- next(cell(A, B, x)) & legal(xplayer, mark(A, B))
+
+
+input(xplayer, mark(1, 1))

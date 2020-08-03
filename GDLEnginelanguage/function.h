@@ -19,4 +19,6 @@ public:
     static string get_arguments(string arge, int &index);
     void show_message();
     static int get_function_index(string mess, int index);
+    static bool regex_function(string mess);
+    static void remove_spaces(string element, int &index);
 };

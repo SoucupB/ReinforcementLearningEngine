@@ -54,8 +54,13 @@ string Functions::get_arguments(string arge, int &index) {
             index++;
             argument += "(" + get_arguments(arge, index) + ")";
         }
-        argument += arge[index];
-        index++;
+        else {
+            argument += arge[index];
+            index++;
+        }
+    }
+    if(index < arge.size() && arge[index] != ')') {
+        return "-1";
     }
     index++;
     return argument;
@@ -69,8 +74,41 @@ void Functions::show_message() {
     cout << "\n";
 }
 
-int Functions::get_function_index(string mess, int index) {
+void Functions::remove_spaces(string element, int &index) {
+    while(index < element.size() && element[index] == ' ')
+        index++;
+}
 
+bool Functions::regex_function(string mess) {
+    int index = 0;
+    while(index < mess.size()) {
+        bool checker = false;
+        remove_spaces(mess, index);
+        while(isalpha(mess[index]) || isdigit(mess[index])) {
+            index++;
+            checker = true;
+        }
+        if(!checker)
+            return false;
+        remove_spaces(mess, index);
+        if(index >= mess.size())
+            return true;
+        if(mess[index] != ',' && mess[index] != '(') {
+            return false;
+        }
+        if(mess[index] == '(') {
+            index++;
+            string next_arg = get_arguments(mess, index);
+            bool inner_function = regex_function(next_arg);
+            if(!inner_function || next_arg == "-1")
+                return false;
+        }
+        index++;
+    }
+    return true;
+}
+
+int Functions::get_function_index(string mess, int index) {
     while(index < mess.size() && mess[index] != '(') {
         if(!isalpha(mess[index]))
             return -1;
@@ -81,6 +119,9 @@ int Functions::get_function_index(string mess, int index) {
     index++;
     int c_index = index;
     string response = get_arguments(mess, index);
-    cout << response << "\n";
+    if(response == "-1")
+        return -1;
+    if(!regex_function(response))
+        return -1;
     return c_index + response.size();
 }
