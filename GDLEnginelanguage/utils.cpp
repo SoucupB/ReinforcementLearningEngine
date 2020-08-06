@@ -20,3 +20,7 @@ bool is_variable(string input) {
 bool is_function(string input) {
     return input.find('(') != string::npos;
 }
+
+int min(int a, int b) {
+    return a < b ? a : b;
+}

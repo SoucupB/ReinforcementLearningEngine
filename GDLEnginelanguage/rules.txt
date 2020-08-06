@@ -23,11 +23,11 @@ line(Player, X) :- cell(1, X, Player) & cell(2, X, Player) & cell(3, X, Player)
 diagonal(Player) :- cell(1, 1, Player) & cell(2, 2, Player) & cell(3, 3, Player)
 diagonal(Player) :- cell(1, 3, Player) & cell(2, 2, Player) & cell(3, 1, Player)
 
-goal(xplayer, 50) :- (line(x, 1) | line(x, 2) | line(x, 3) | diagonal(xplayer)) & ~(line(o, 1) | line(o, 2) | line(o, 3))
-goal(oplayer, 50) :- (line(x, 1) | line(x, 2) | line(x, 3)) & ~(line(o, 1) | line(o, 2) | line(o, 3))
+goal(xplayer, 50) :- (line(x, 1) | line(x, 2) | line(x, 3) | diagonal(x)) & ~(line(o, 1) | line(o, 2) | line(o, 3) | diagonal(o))
+goal(oplayer, 50) :- (line(o, 1) | line(o, 2) | line(o, 3) | diagonal(o)) & ~(line(x, 1) | line(x, 2) | line(x, 3) | diagonal(x))
 
 ###################################################################################
 
 input(xplayer, mark(1, 1))
 
-input(xplayer, goal);
+input(xplayer, goal(xplayer, 50));

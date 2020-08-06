@@ -1,32 +1,5 @@
 #include "function.h"
-// Functions *Functions::get_function(string funct) {
-//     Functions *response = new Functions;
-//     string function_name = "";
-//     int index = 0;
-//     while(index < funct.size() && funct[index] != '(') {
-//         function_name += funct[index];
-//         index++;
-//     }
-//     response->name = function_name;
-//     index++;
-//     vector<string> arg_response;
-//     while(index < funct.size() && funct[index] != ')') {
-//         string argv = Functions::get_argument(funct, index);
-//         arg_response.push_back(argv);
-//         remove_spaces(funct, index);
-//         if(index < funct.size() && funct[index] != ',' && funct[index] != ')')
-//         {
-//             error("Function format is invalid!");
-//         }
-//         index++;
-//     }
-//     response->args = arg_response;
-//     response->add_function_type();
-//     if(index - 1 < funct.size() && funct[index - 1] != ')') {
-//         error("Function format is invalid!");
-//     }
-//     return response;
-// }
+unordered_map<string, int> inits;
 
 void Functions::add_function_type() {
     if(this->name == "init")
@@ -41,6 +14,10 @@ void Functions::add_function_type() {
         this->function_type = NEXT;
     else this->function_type = PREDICATE;
 }
+
+// Functions *get_init(int i) {
+//     return inits[i];
+// }
 
 string Functions::get_argument(string arge, int &index) {
     string argument = "";
@@ -182,7 +159,6 @@ string Functions::get_simple_arguments(string input, int &index) {
 bool Functions::is_function(string input) {
     int index = 0;
     bool is_funct = is_function_recursion(input, index);
-  //  cout << index << " " << is_funct << " " << input.size();
     if(index < input.size() - 1)
         return false;
     return is_funct;
@@ -289,6 +265,79 @@ bool Functions::regex_function(string mess) {
         index++;
     }
     return true;
+}
+
+Functions *Functions::get_function_at_index(string input, int &index) {
+    int c_index = index;
+    string current_str = input.substr(c_index, index);
+    while(index < input.size() && !is_function(current_str)) {
+        index++;
+        current_str = input.substr(c_index, index);
+    }
+    return get_function(current_str);
+}
+
+string Functions::to_string() {
+    string full_argument = "";
+    for(int i = 0; i < this->args.size() - 1; i++)
+        full_argument += this->args[i] + ",";
+    full_argument += this->args[this->args.size() - 1];
+    return this->name + "(" + full_argument + ")";
+}
+
+void Functions::process_line(string input) {
+    int index = 0;
+    Functions *first_operator = get_function_at_index(input, index);
+    if(first_operator->name == "init")
+    {
+        inits[get_function(first_operator->args[0])->to_string()] = 1;
+        return ;
+    }
+    remove_spaces(input, index);
+    if(index + 1 < input.size() && input[index] == ':' && input[index] == '-') {
+        index += 2;
+    }
+    remove_spaces(input, index);
+    Definitions *def = new Definitions;
+    Functions *second_operator = get_function_at_index(input, index);
+    def->definitions[first_operator->name].push_back(second_operator);
+    while(index < input.size() && (input[index] == '|' || input[index] == '&')) {
+        if(input[index] == '|') {
+            remove_spaces(input, index);
+            Functions *third_operator = get_function_at_index(input, index);
+            def->definitions_signs[first_operator->name].push_back('|');
+            def->definitions[first_operator->name].push_back(third_operator);
+        }
+        if(input[index] == '&') {
+            remove_spaces(input, index);
+            Functions *third_operator = get_function_at_index(input, index);
+            def->definitions_signs[first_operator->name].push_back('&');
+            def->definitions[first_operator->name].push_back(third_operator);
+        }
+    }
+    first_operator->def = def;
+}
+
+bool Functions::processor(string init) {
+    Functions *current_funct = get_function(init);
+    if(current_funct->name == "init") {
+        Functions *query_function = get_function(current_funct->args[1]);
+        if(!query_function->def)
+            return search_in_definition(query_function);
+        Definitions *current_def = query_function->def;
+        Functions *initial_function = current_def->definitions[0];
+        for(int i = 1; i < current_def->definitions.size(); i++) {
+
+        }
+
+    }
+    return true;
+}
+
+bool Functions::search_in_definition(Functions *current_funct) {
+    if(inits[current_funct->to_string()])
+        return true;
+    return false;
 }
 
 int Functions::get_function_index(string mess, int index) {

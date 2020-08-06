@@ -3,6 +3,7 @@
 #include <vector>
 #include <ctype.h>
 #include "utils.h"
+#include <unordered_map>
 using namespace std;
 class Functions {
 public:
@@ -11,7 +12,13 @@ public:
     vector<vector<Functions*> > childs;
     vector<int> signs;
     vector<int> argument_types;
+    class Definitions {
+        public:
+            unordered_map<string, vector<Functions *> > definitions;
+            unordered_map<string, vector<int> > definitions_signs;
+    };
     Functions *parent;
+    Definitions *def = NULL;
     vector<string> permited_strings = {"init", "next", "does", "legal", "true"};
     int function_type;
     string player_name;
@@ -32,4 +39,10 @@ public:
     static string get_argument(string arge, int &index);
     static string get_arguments(string arge, int &index);
     static int argument_types_function(string argument);
+    static Functions *get_function_at_index(string input, int &index);
+    static void process_line(string input);
+    static bool processor(string init);
+    static bool search_in_definition(Functions *current_funct);
+    string to_string();
 };
+//Functions *get_init(int i);

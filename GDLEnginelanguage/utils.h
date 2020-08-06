@@ -30,3 +30,4 @@ void error(string error);
 bool is_integer(string input);
 bool is_variable(string input);
 bool is_function(string input);
+int min(int a, int b);
