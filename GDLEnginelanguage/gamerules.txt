@@ -77,5 +77,4 @@ legal(xplayer, mark(X,Y)) :- true(cell(X,Y,b)) & true(control(W))
 
 does(xplayer, mark(A, B)) :- next(cell(A, B, x))
 
-
 action(xplayer, mark(1, 1))

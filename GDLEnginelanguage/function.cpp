@@ -1,31 +1,45 @@
 #include "function.h"
-Functions Functions::get_function(string funct) {
-    Functions response;
-    string function_name = "";
-    int index = 0;
-    while(index < funct.size() && funct[index] != '(') {
-        function_name += funct[index];
-        index++;
-    }
-    response.name = function_name;
-    index++;
-    vector<string> arg_response;
-    while(index < funct.size() && funct[index] != ')') {
-        string argv = Functions::get_argument(funct, index);
-        arg_response.push_back(argv);
-        if(funct[index] != ',' && funct[index] != ')')
-        {
-            cout << "Error: Function format is invalid!";
-            exit(0);
-        }
-        index++;
-    }
-    response.args = arg_response;
-    if(funct[index - 1] != ')') {
-        cout << "Error: Function format is invalid!";
-        exit(0);
-    }
-    return response;
+// Functions *Functions::get_function(string funct) {
+//     Functions *response = new Functions;
+//     string function_name = "";
+//     int index = 0;
+//     while(index < funct.size() && funct[index] != '(') {
+//         function_name += funct[index];
+//         index++;
+//     }
+//     response->name = function_name;
+//     index++;
+//     vector<string> arg_response;
+//     while(index < funct.size() && funct[index] != ')') {
+//         string argv = Functions::get_argument(funct, index);
+//         arg_response.push_back(argv);
+//         remove_spaces(funct, index);
+//         if(index < funct.size() && funct[index] != ',' && funct[index] != ')')
+//         {
+//             error("Function format is invalid!");
+//         }
+//         index++;
+//     }
+//     response->args = arg_response;
+//     response->add_function_type();
+//     if(index - 1 < funct.size() && funct[index - 1] != ')') {
+//         error("Function format is invalid!");
+//     }
+//     return response;
+// }
+
+void Functions::add_function_type() {
+    if(this->name == "init")
+        this->function_type = INIT;
+    else if(this->name == "true")
+        this->function_type = TRUE;
+    else if(this->name == "legal")
+        this->function_type = LEGAL;
+    else if(this->name == "does")
+        this->function_type = DOES;
+    else if(this->name == "next")
+        this->function_type = NEXT;
+    else this->function_type = PREDICATE;
 }
 
 string Functions::get_argument(string arge, int &index) {
@@ -36,11 +50,12 @@ string Functions::get_argument(string arge, int &index) {
             argument += arge[index];
         index++;
     }
-    if(arge[index] == ',' || arge[index] == ')')
+    if(index < arge.size() && (arge[index] == ',' || arge[index] == ')'))
         return argument;
-    if(arge[index] == '(') {
+    if(index < arge.size() && arge[index] == '(') {
         index++;
-        return argument + "(" + get_arguments(arge, index) + ")";
+        string args = get_arguments(arge, index);
+        return argument + "(" + args + ")";
     }
     return argument;
 }
@@ -66,7 +81,175 @@ string Functions::get_arguments(string arge, int &index) {
     return argument;
 }
 
+Functions *Functions::get_function(string funct) {
+    int index = 0;
+    Functions *response = get_function_object(funct, index);
+    if(index < funct.size() - 1) {
+        free(response);
+        return NULL;
+    }
+    return response;
+}
+
+Functions *Functions::get_function_object(string input, int &index) {
+    string function_name = "";
+    remove_spaces(input, index);
+    while(index < input.size() && (isdigit(input[index]) || isalpha(input[index]) || input[index] == '_')) {
+        function_name += input[index];
+        index++;
+    }
+    if(function_name == "")
+        return NULL;
+    if(!isalpha(function_name[0]))
+        return NULL;
+    if(index == input.size() || input[index] != '(')
+        return NULL;
+    Functions *function = new Functions;
+    function->name = function_name;
+    while(index < input.size() && input[index] != ')') {
+        index++;
+        string current_arg = get_simple_arguments(input, index);
+        if(current_arg == "")
+            return NULL;
+        if(input[index] != ',' && input[index] != ')')
+            return NULL;
+        function->args.push_back(current_arg);
+        function->argument_types.push_back(argument_types_function(current_arg));
+    }
+    if(index == input.size())
+        return NULL;
+    if(input[index] != ')') {
+        return NULL;
+    }
+    return function;
+}
+
+string Functions::get_function_argument(string input, int &index) {
+    string function_name = "";
+    remove_spaces(input, index);
+    while(index < input.size() && (isdigit(input[index]) || isalpha(input[index]) || input[index] == '_')) {
+        function_name += input[index];
+        index++;
+    }
+    if(function_name == "")
+        return "";
+    if(!isalpha(function_name[0]))
+        return "";
+    if(index == input.size() || input[index] != '(')
+        return "";
+    string response = function_name + "(";
+    while(index < input.size() && input[index] != ')') {
+        index++;
+        string current_argument = get_simple_arguments(input, index);
+        if(current_argument == "")
+            return "";
+        response += current_argument;
+        if(input[index] != ',' && input[index] != ')')
+            return "";
+        if(input[index] == ',' )
+            response += ", ";
+        if(input[index] == ')' )
+            response += ")";
+    }
+    if(index == input.size())
+        return "";
+    if(input[index] != ')') {
+        return "";
+    }
+    return response;
+}
+
+string Functions::get_simple_arguments(string input, int &index) {
+    remove_spaces(input, index);
+    string argument = "";
+    int c_index = index;
+    while(index < input.size() && (isdigit(input[index]) || isalpha(input[index]))) {
+        argument += input[index];
+        index++;
+    }
+    if(argument == "")
+        return "";
+    if(input[index] == '(') {
+        index = c_index;
+        string inner_function = get_function_argument(input, index);
+        index++;
+        return inner_function;
+    }
+    remove_spaces(input, index);
+    return argument;
+}
+
+bool Functions::is_function(string input) {
+    int index = 0;
+    bool is_funct = is_function_recursion(input, index);
+  //  cout << index << " " << is_funct << " " << input.size();
+    if(index < input.size() - 1)
+        return false;
+    return is_funct;
+}
+
+int Functions::argument_types_function(string argument) {
+    if(is_integer(argument))
+        return NUMBER;
+    if(is_variable(argument))
+        return VARIABLE;
+    if(is_function(argument))
+        return PREDICATE;
+    return CONSTANT;
+}
+
+bool Functions::is_function_recursion(string input, int &index) {
+    string function_name = "";
+    remove_spaces(input, index);
+    while(index < input.size() && (isdigit(input[index]) || isalpha(input[index]) || input[index] == '_')) {
+        function_name += input[index];
+        index++;
+    }
+    if(function_name == "")
+        return false;
+    if(!isalpha(function_name[0]))
+        return false;
+    if(index == input.size() || input[index] != '(')
+        return false;
+    while(index < input.size() && input[index] != ')') {
+        index++;
+        bool is_arg = is_argument(input, index);
+        if(!is_arg)
+            return false;
+        if(input[index] != ',' && input[index] != ')')
+            return false;
+    }
+    if(index == input.size())
+        return false;
+    if(input[index] != ')') {
+        return false;
+    }
+    return true;
+}
+
+bool Functions::is_argument(string input, int &index) {
+    remove_spaces(input, index);
+    string argument = "";
+    int c_index = index;
+    while(index < input.size() && (isdigit(input[index]) || isalpha(input[index]))) {
+        argument += input[index];
+        index++;
+    }
+    if(argument == "")
+        return false;
+    if(input[index] == '(') {
+        index = c_index;
+        bool inner_function = is_function_recursion(input, index);
+        index++;
+        return inner_function;
+    }
+    remove_spaces(input, index);
+    return true;
+}
+
 void Functions::show_message() {
+    if(!this)
+        error("Function is null!!");
     cout << "Name is: " << this->name << "\nArguments: ";
     for(int i = 0; i < this->args.size(); i++) {
         cout << this->args[i] << " ";
