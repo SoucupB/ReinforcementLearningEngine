@@ -9,12 +9,14 @@ class Functions {
 public:
     string name;
     vector<string> args;
-    vector<vector<Functions*> > childs;
-    vector<int> signs;
+    vector<vector<Functions*> > childs; //To be removed
+    vector<int> signs; // To be removed
     vector<int> argument_types;
     class Definitions {
         public:
             unordered_map<string, vector<Functions *> > definitions;
+            vector<Functions *> definition_vector;
+            vector<char> definition_vector_signs;
             unordered_map<string, vector<int> > definitions_signs;
     };
     Functions *parent;
@@ -42,7 +44,10 @@ public:
     static Functions *get_function_at_index(string input, int &index);
     static void process_line(string input);
     static bool processor(string init);
-    static bool search_in_definition(Functions *current_funct);
+    static bool search_inits(Functions *current_funct);
     string to_string();
+    void deep_copy(Functions *fct);
+    static bool get_responses(Functions *funct);
+    static Functions *find_equalizer(Functions *funct);
 };
 //Functions *get_init(int i);

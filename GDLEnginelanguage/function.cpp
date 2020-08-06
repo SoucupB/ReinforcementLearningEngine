@@ -1,5 +1,6 @@
 #include "function.h"
 unordered_map<string, int> inits;
+vector<Functions*> predicate_definitions;
 
 void Functions::add_function_type() {
     if(this->name == "init")
@@ -14,10 +15,6 @@ void Functions::add_function_type() {
         this->function_type = NEXT;
     else this->function_type = PREDICATE;
 }
-
-// Functions *get_init(int i) {
-//     return inits[i];
-// }
 
 string Functions::get_argument(string arge, int &index) {
     string argument = "";
@@ -271,8 +268,9 @@ Functions *Functions::get_function_at_index(string input, int &index) {
     int c_index = index;
     string current_str = input.substr(c_index, index);
     while(index < input.size() && !is_function(current_str)) {
+      //  cout << input.substr(c_index, index - c_index) << "\n";
         index++;
-        current_str = input.substr(c_index, index);
+        current_str = input.substr(c_index, index - c_index);
     }
     return get_function(current_str);
 }
@@ -294,26 +292,30 @@ void Functions::process_line(string input) {
         return ;
     }
     remove_spaces(input, index);
-    if(index + 1 < input.size() && input[index] == ':' && input[index] == '-') {
+    if(index + 1 < input.size() && input[index] == ':' && input[index + 1] == '-') {
         index += 2;
     }
     remove_spaces(input, index);
+    predicate_definitions.push_back(first_operator);
     Definitions *def = new Definitions;
     Functions *second_operator = get_function_at_index(input, index);
-    def->definitions[first_operator->name].push_back(second_operator);
+    remove_spaces(input, index);
+    def->definition_vector.push_back(second_operator);
     while(index < input.size() && (input[index] == '|' || input[index] == '&')) {
+        remove_spaces(input, index);
         if(input[index] == '|') {
-            remove_spaces(input, index);
+            index++;
             Functions *third_operator = get_function_at_index(input, index);
-            def->definitions_signs[first_operator->name].push_back('|');
-            def->definitions[first_operator->name].push_back(third_operator);
+            def->definition_vector_signs.push_back('|');
+            def->definition_vector.push_back(third_operator);
         }
         if(input[index] == '&') {
-            remove_spaces(input, index);
+            index++;
             Functions *third_operator = get_function_at_index(input, index);
-            def->definitions_signs[first_operator->name].push_back('&');
-            def->definitions[first_operator->name].push_back(third_operator);
+            def->definition_vector_signs.push_back('&');
+            def->definition_vector.push_back(third_operator);
         }
+        remove_spaces(input, index);
     }
     first_operator->def = def;
 }
@@ -322,19 +324,87 @@ bool Functions::processor(string init) {
     Functions *current_funct = get_function(init);
     if(current_funct->name == "init") {
         Functions *query_function = get_function(current_funct->args[1]);
-        if(!query_function->def)
-            return search_in_definition(query_function);
-        Definitions *current_def = query_function->def;
-        Functions *initial_function = current_def->definitions[0];
-        for(int i = 1; i < current_def->definitions.size(); i++) {
-
-        }
-
+        return get_responses(query_function);
     }
     return true;
 }
 
-bool Functions::search_in_definition(Functions *current_funct) {
+bool Functions::get_responses(Functions *funct) {
+    Functions *recharger = find_equalizer(funct);
+    if(recharger) {
+        funct = recharger;
+    }
+    if(!funct->def)
+        return search_inits(funct);
+    Definitions *current_def = funct->def;
+    bool result = get_responses(current_def->definition_vector[0]);
+    for(int i = 0; i < current_def->definition_vector_signs.size(); i++) {
+        char sign = current_def->definition_vector_signs[i];
+        if(sign == '|') {
+            result |= get_responses(current_def->definition_vector[i + 1]);
+        }
+        if(sign == '&') {
+            result &= get_responses(current_def->definition_vector[i + 1]);
+        }
+    }
+    return result;
+}
+
+void Functions::deep_copy(Functions *fct) {
+    this->name = fct->name;
+    this->args = fct->args;
+    this->argument_types = fct->argument_types;
+    Definitions *new_definition = new Definitions;
+    new_definition->definition_vector = fct->def->definition_vector;
+    new_definition->definition_vector_signs = fct->def->definition_vector_signs;
+    free(this->def);
+    this->def = new_definition;
+}
+
+Functions *Functions::find_equalizer(Functions *funct) {
+    Functions *appropiat_function = new Functions;
+    bool function_checker = 0;
+    for(int i = 0; i < predicate_definitions.size(); i++) {
+        if(predicate_definitions[i]->name == funct->name) {
+            bool checker = 1;
+            Functions *current_function = predicate_definitions[i];
+            for(int j = 0; checker && j < predicate_definitions[i]->args.size(); j++) {
+                if(predicate_definitions[i]->args[j] != funct->args[j] && predicate_definitions[i]->argument_types[j] != VARIABLE) {
+                    checker = 0;
+                }
+            }
+            if(checker) {
+                appropiat_function->deep_copy(current_function);
+                function_checker = 1;
+                break;
+            }
+        }
+    }
+    if(!function_checker) {
+        free(appropiat_function);
+        return NULL;
+    }
+    unordered_map<string, string> parameters;
+    unordered_map<string, bool> used;
+    for(int i = 0; i < appropiat_function->args.size(); i++) {
+        if(appropiat_function->argument_types[i] == VARIABLE) {
+            parameters[appropiat_function->args[i]] = funct->args[i];
+            used[appropiat_function->args[i]] = 1;
+            appropiat_function->args[i] = funct->args[i];
+        }
+    }
+    Definitions *def = appropiat_function->def;
+    for(int i = 0; i < def->definition_vector.size(); i++) {
+        for(int j = 0; j < def->definition_vector[i]->args.size(); j++) {
+            if(used[def->definition_vector[i]->args[j]])
+                def->definition_vector[i]->args[j] = parameters[def->definition_vector[i]->args[j]];
+        }
+    }
+    appropiat_function->def = def;
+    return appropiat_function;
+}
+
+bool Functions::search_inits(Functions *current_funct) {
     if(inits[current_funct->to_string()])
         return true;
     return false;
