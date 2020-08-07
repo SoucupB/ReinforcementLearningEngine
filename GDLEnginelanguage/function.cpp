@@ -174,6 +174,7 @@ int Functions::argument_types_function(string argument) {
 bool Functions::is_function_recursion(string input, int &index) {
     string function_name = "";
     remove_spaces(input, index);
+   // cout << input << "-\n";
     while(index < input.size() && (isdigit(input[index]) || isalpha(input[index]) || input[index] == '_')) {
         function_name += input[index];
         index++;
@@ -267,11 +268,12 @@ bool Functions::regex_function(string mess) {
 Functions *Functions::get_function_at_index(string input, int &index) {
     int c_index = index;
     string current_str = input.substr(c_index, index);
-    while(index < input.size() && !is_function(current_str)) {
-      //  cout << input.substr(c_index, index - c_index) << "\n";
+    while(index < input.size() && !is_function(current_str) || index == c_index) {
+       // cout << input.substr(c_index, index - c_index) << " " << c_index << " " << index << " " << is_function(current_str) << "\n";
         index++;
         current_str = input.substr(c_index, index - c_index);
     }
+   // cout << input.substr(c_index, index - c_index) << " " << c_index << " " << index << " " << is_function(current_str) << "\n";
     return get_function(current_str);
 }
 
@@ -295,6 +297,8 @@ void Functions::process_line(string input) {
     if(index + 1 < input.size() && input[index] == ':' && input[index + 1] == '-') {
         index += 2;
     }
+    else
+        return ;
     remove_spaces(input, index);
     predicate_definitions.push_back(first_operator);
     Definitions *def = new Definitions;
@@ -317,6 +321,7 @@ void Functions::process_line(string input) {
         }
         remove_spaces(input, index);
     }
+  //  cout << def->definition_vector.size() << "\n";
     first_operator->def = def;
 }
 
@@ -330,21 +335,31 @@ bool Functions::processor(string init) {
 }
 
 bool Functions::get_responses(Functions *funct) {
+  //  funct->show_message();
     Functions *recharger = find_equalizer(funct);
+    // recharger->show_message();
+    // exit(0);
     if(recharger) {
         funct = recharger;
     }
     if(!funct->def)
         return search_inits(funct);
     Definitions *current_def = funct->def;
+   // for(int i = 0; i < current_def->definition_vector.size(); i++)
+  //      current_def->definition_vector[i]->show_message();
+  //  exit(0);
+
     bool result = get_responses(current_def->definition_vector[0]);
+    //current_def->definition_vector[0]->show_message();
     for(int i = 0; i < current_def->definition_vector_signs.size(); i++) {
         char sign = current_def->definition_vector_signs[i];
         if(sign == '|') {
-            result |= get_responses(current_def->definition_vector[i + 1]);
+            bool response = get_responses(current_def->definition_vector[i + 1]);
+            result |= response;
         }
         if(sign == '&') {
-            result &= get_responses(current_def->definition_vector[i + 1]);
+            bool response = get_responses(current_def->definition_vector[i + 1]);
+            result &= response;
         }
     }
     return result;
@@ -355,26 +370,36 @@ void Functions::deep_copy(Functions *fct) {
     this->args = fct->args;
     this->argument_types = fct->argument_types;
     Definitions *new_definition = new Definitions;
-    new_definition->definition_vector = fct->def->definition_vector;
+    if(fct && fct->def) {
+        for(int i = 0; i < fct->def->definition_vector.size(); i++)
+        {
+            Functions *new_function = new Functions;
+            new_function->name = fct->def->definition_vector[i]->name;
+            new_function->args = fct->def->definition_vector[i]->args;
+            new_function->argument_types = fct->def->definition_vector[i]->argument_types;
+            new_function->def = fct->def->definition_vector[i]->def;
+            new_definition->definition_vector.push_back(new_function);
+        }
+    }
     new_definition->definition_vector_signs = fct->def->definition_vector_signs;
     free(this->def);
     this->def = new_definition;
 }
 
 Functions *Functions::find_equalizer(Functions *funct) {
+  //  cout << funct->to_string() << "\n";
     Functions *appropiat_function = new Functions;
     bool function_checker = 0;
     for(int i = 0; i < predicate_definitions.size(); i++) {
         if(predicate_definitions[i]->name == funct->name) {
             bool checker = 1;
-            Functions *current_function = predicate_definitions[i];
             for(int j = 0; checker && j < predicate_definitions[i]->args.size(); j++) {
                 if(predicate_definitions[i]->args[j] != funct->args[j] && predicate_definitions[i]->argument_types[j] != VARIABLE) {
                     checker = 0;
                 }
             }
             if(checker) {
-                appropiat_function->deep_copy(current_function);
+                appropiat_function->deep_copy(predicate_definitions[i]);
                 function_checker = 1;
                 break;
             }
