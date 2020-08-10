@@ -1,6 +1,7 @@
 #include "function.h"
 unordered_map<string, int> inits;
 vector<Functions*> predicate_definitions;
+unordered_map<string, string> marker;
 
 void Functions::add_function_type() {
     if(this->name == "init")
@@ -321,7 +322,6 @@ void Functions::process_line(string input) {
         }
         remove_spaces(input, index);
     }
-  //  cout << def->definition_vector.size() << "\n";
     first_operator->def = def;
 }
 
@@ -329,28 +329,21 @@ bool Functions::processor(string init) {
     Functions *current_funct = get_function(init);
     if(current_funct->name == "init") {
         Functions *query_function = get_function(current_funct->args[1]);
+        //cout << query_function->to_string() << "\n";
         return get_responses(query_function);
     }
     return true;
 }
 
 bool Functions::get_responses(Functions *funct) {
-  //  funct->show_message();
     Functions *recharger = find_equalizer(funct);
-    // recharger->show_message();
-    // exit(0);
     if(recharger) {
         funct = recharger;
     }
     if(!funct->def)
         return search_inits(funct);
     Definitions *current_def = funct->def;
-   // for(int i = 0; i < current_def->definition_vector.size(); i++)
-  //      current_def->definition_vector[i]->show_message();
-  //  exit(0);
-
     bool result = get_responses(current_def->definition_vector[0]);
-    //current_def->definition_vector[0]->show_message();
     for(int i = 0; i < current_def->definition_vector_signs.size(); i++) {
         char sign = current_def->definition_vector_signs[i];
         if(sign == '|') {
@@ -387,7 +380,6 @@ void Functions::deep_copy(Functions *fct) {
 }
 
 Functions *Functions::find_equalizer(Functions *funct) {
-  //  cout << funct->to_string() << "\n";
     Functions *appropiat_function = new Functions;
     bool function_checker = 0;
     for(int i = 0; i < predicate_definitions.size(); i++) {

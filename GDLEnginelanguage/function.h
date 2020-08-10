@@ -17,7 +17,7 @@ public:
             unordered_map<string, vector<Functions *> > definitions;
             vector<Functions *> definition_vector;
             vector<char> definition_vector_signs;
-            unordered_map<string, vector<int> > definitions_signs;
+         //   unordered_map<string, vector<int> > definitions_signs;
     };
     Functions *parent;
     Definitions *def = NULL;
