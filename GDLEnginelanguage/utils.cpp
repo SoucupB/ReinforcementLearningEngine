@@ -17,7 +17,7 @@ bool is_variable(string input) {
     return false;
 }
 
-bool is_function(string input) {
+bool is_function_var(string input) {
     return input.find('(') != string::npos;
 }
 

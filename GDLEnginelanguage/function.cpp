@@ -2,6 +2,10 @@
 unordered_map<string, int> inits;
 vector<Functions*> predicate_definitions;
 unordered_map<string, string> marker;
+unordered_map<string, vector< vector<string> > > var_params;
+unordered_map<string, vector<string> > string_definitions;
+
+Functions *last_param = NULL;
 
 void Functions::add_function_type() {
     if(this->name == "init")
@@ -156,7 +160,7 @@ string Functions::get_simple_arguments(string input, int &index) {
 
 bool Functions::is_function(string input) {
     int index = 0;
-    bool is_funct = is_function_recursion(input, index);
+    bool is_funct = is_function_recursion(input, index, 0);
     if(index < input.size() - 1)
         return false;
     return is_funct;
@@ -167,15 +171,14 @@ int Functions::argument_types_function(string argument) {
         return NUMBER;
     if(is_variable(argument))
         return VARIABLE;
-    if(is_function(argument))
+    if(is_function_var(argument))
         return PREDICATE;
     return CONSTANT;
 }
 
-bool Functions::is_function_recursion(string input, int &index) {
+bool Functions::is_function_recursion(string input, int &index, int depth) {
     string function_name = "";
     remove_spaces(input, index);
-   // cout << input << "-\n";
     while(index < input.size() && (isdigit(input[index]) || isalpha(input[index]) || input[index] == '_')) {
         function_name += input[index];
         index++;
@@ -188,7 +191,7 @@ bool Functions::is_function_recursion(string input, int &index) {
         return false;
     while(index < input.size() && input[index] != ')') {
         index++;
-        bool is_arg = is_argument(input, index);
+        bool is_arg = is_argument(input, index, depth + 1);
         if(!is_arg)
             return false;
         if(input[index] != ',' && input[index] != ')')
@@ -202,7 +205,7 @@ bool Functions::is_function_recursion(string input, int &index) {
     return true;
 }
 
-bool Functions::is_argument(string input, int &index) {
+bool Functions::is_argument(string input, int &index, int depth) {
     remove_spaces(input, index);
     string argument = "";
     int c_index = index;
@@ -214,7 +217,7 @@ bool Functions::is_argument(string input, int &index) {
         return false;
     if(input[index] == '(') {
         index = c_index;
-        bool inner_function = is_function_recursion(input, index);
+        bool inner_function = is_function_recursion(input, index, depth + 1);
         index++;
         return inner_function;
     }
@@ -237,44 +240,13 @@ void Functions::remove_spaces(string element, int &index) {
         index++;
 }
 
-bool Functions::regex_function(string mess) {
-    int index = 0;
-    while(index < mess.size()) {
-        bool checker = false;
-        remove_spaces(mess, index);
-        while(isalpha(mess[index]) || isdigit(mess[index])) {
-            index++;
-            checker = true;
-        }
-        if(!checker)
-            return false;
-        remove_spaces(mess, index);
-        if(index >= mess.size())
-            return true;
-        if(mess[index] != ',' && mess[index] != '(') {
-            return false;
-        }
-        if(mess[index] == '(') {
-            index++;
-            string next_arg = get_arguments(mess, index);
-            bool inner_function = regex_function(next_arg);
-            if(!inner_function || next_arg == "-1")
-                return false;
-        }
-        index++;
-    }
-    return true;
-}
-
 Functions *Functions::get_function_at_index(string input, int &index) {
     int c_index = index;
     string current_str = input.substr(c_index, index);
     while(index < input.size() && !is_function(current_str) || index == c_index) {
-       // cout << input.substr(c_index, index - c_index) << " " << c_index << " " << index << " " << is_function(current_str) << "\n";
         index++;
         current_str = input.substr(c_index, index - c_index);
     }
-   // cout << input.substr(c_index, index - c_index) << " " << c_index << " " << index << " " << is_function(current_str) << "\n";
     return get_function(current_str);
 }
 
@@ -286,12 +258,56 @@ string Functions::to_string() {
     return this->name + "(" + full_argument + ")";
 }
 
+// void Functions::process_line(string input) {
+//     int index = 0;
+//     Functions *first_operator = get_function_at_index(input, index);
+//     if(first_operator->name == "init")
+//     {
+//         inits[get_function(first_operator->args[0])->to_string()] = 1;
+//         return ;
+//     }
+//     remove_spaces(input, index);
+//     if(index + 1 < input.size() && input[index] == ':' && input[index + 1] == '-') {
+//         index += 2;
+//     }
+//     else
+//         return ;
+//     remove_spaces(input, index);
+//     predicate_definitions.push_back(first_operator);
+//     Definitions *def = new Definitions;
+//     Functions *second_operator = get_function_at_index(input, index);
+//     remove_spaces(input, index);
+//     def->definition_vector.push_back(second_operator);
+//     while(index < input.size() && (input[index] == '|' || input[index] == '&')) {
+//         remove_spaces(input, index);
+//         if(input[index] == '|') {
+//             index++;
+//             Functions *third_operator = get_function_at_index(input, index);
+//             def->definition_vector_signs.push_back('|');
+//             def->definition_vector.push_back(third_operator);
+//         }
+//         if(input[index] == '&') {
+//             index++;
+//             Functions *third_operator = get_function_at_index(input, index);
+//             def->definition_vector_signs.push_back('&');
+//             def->definition_vector.push_back(third_operator);
+//         }
+//         remove_spaces(input, index);
+//     }
+//     first_operator->def = def;
+// }
+
+void Functions::process_function(Functions *fct) {
+   // var_params
+}
+
 void Functions::process_line(string input) {
     int index = 0;
     Functions *first_operator = get_function_at_index(input, index);
     if(first_operator->name == "init")
     {
         inits[get_function(first_operator->args[0])->to_string()] = 1;
+        first_operator->function_type = INIT;
         return ;
     }
     remove_spaces(input, index);
@@ -300,63 +316,211 @@ void Functions::process_line(string input) {
     }
     else
         return ;
+    var_params[first_operator->name].push_back(first_operator->args);
     remove_spaces(input, index);
-    predicate_definitions.push_back(first_operator);
-    Definitions *def = new Definitions;
-    Functions *second_operator = get_function_at_index(input, index);
-    remove_spaces(input, index);
-    def->definition_vector.push_back(second_operator);
-    while(index < input.size() && (input[index] == '|' || input[index] == '&')) {
-        remove_spaces(input, index);
-        if(input[index] == '|') {
-            index++;
-            Functions *third_operator = get_function_at_index(input, index);
-            def->definition_vector_signs.push_back('|');
-            def->definition_vector.push_back(third_operator);
-        }
-        if(input[index] == '&') {
-            index++;
-            Functions *third_operator = get_function_at_index(input, index);
-            def->definition_vector_signs.push_back('&');
-            def->definition_vector.push_back(third_operator);
-        }
-        remove_spaces(input, index);
-    }
-    first_operator->def = def;
+    int cutted_index = input.size() - index;
+    string definition_string = input.substr(index, cutted_index);
+    first_operator->function_type = PREDICATE;
+    definition_string.erase(remove(definition_string.begin(), definition_string.end(), ' '), definition_string.end());
+    string_definitions[first_operator->name].push_back(definition_string);
+    return ;
 }
 
-bool Functions::processor(string init) {
-    Functions *current_funct = get_function(init);
-    if(current_funct->name == "init") {
-        Functions *query_function = get_function(current_funct->args[1]);
-        //cout << query_function->to_string() << "\n";
-        return get_responses(query_function);
+string modifier(unordered_map<string, string> elems, string function_name, string to_modify, int index) {
+    char final_str[512] = {0};
+    int char_index = 0, indexes[512], strings[512], str_indexes = 0;
+    for(int i = 0; i < to_modify.size(); i++) {
+        for(int j = 0; j < var_params[function_name][index].size(); j++) {
+            bool checker = 1;
+            for(int k = 0; checker == 1, k < var_params[function_name][index][j].size(); k++) {
+                if(i + k >= to_modify.size())
+                    checker = 0;
+                if(i + k < to_modify.size() && var_params[function_name][index][j][k] != to_modify[i + k])
+                    checker = 0;
+            }
+            if(checker) {
+                indexes[str_indexes] = i;
+                strings[str_indexes] = j;
+                str_indexes++;
+            }
+        }
     }
-    return true;
+    int k = 0;
+    for(int i = 0; i < to_modify.size(); i++) {
+        if(i != indexes[k]) {
+            final_str[char_index++] = to_modify[i];
+        }
+        else {
+            string equalizer = elems[var_params[function_name][index][strings[k]]];
+            for(int j = 0; j < equalizer.size(); j++) {
+                final_str[char_index++] = equalizer[j];
+            }
+            i += var_params[function_name][index][strings[k]].size() - 1;
+            k++;
+        }
+    }
+    return string(final_str);
 }
 
-bool Functions::get_responses(Functions *funct) {
-    Functions *recharger = find_equalizer(funct);
-    if(recharger) {
-        funct = recharger;
-    }
-    if(!funct->def)
-        return search_inits(funct);
-    Definitions *current_def = funct->def;
-    bool result = get_responses(current_def->definition_vector[0]);
-    for(int i = 0; i < current_def->definition_vector_signs.size(); i++) {
-        char sign = current_def->definition_vector_signs[i];
-        if(sign == '|') {
-            bool response = get_responses(current_def->definition_vector[i + 1]);
-            result |= response;
+vector<string> *search_params(Functions *fct) {
+    for(int i = 0; i < var_params[fct->name].size(); i++) {
+        bool checker = true;
+        for(int j = 0; j < fct->args.size(); j++)
+        {
+            if(fct->args.size() != var_params[fct->name][i].size()) {
+                checker = false;
+                break;
+            }
+            else {
+                if(Functions::argument_types_function(var_params[fct->name][i][j]) != VARIABLE && fct->args[j] != var_params[fct->name][i][j])
+                {
+                    checker = false;
+                    break;
+                }
+            }
         }
-        if(sign == '&') {
-            bool response = get_responses(current_def->definition_vector[i + 1]);
-            result &= response;
+        if(checker) {
+            return &var_params[fct->name][i];
         }
     }
-    return result;
+    return NULL;
 }
+
+unordered_map<string, string> create_map(vector<string> *alpha, vector<string> *beta) {
+    unordered_map<string, string> response;
+    for(int i = 0; i < alpha->size(); i++) {
+        response[(*alpha)[i]] = (*beta)[i];
+    }
+    return response;
+}
+bool Functions::func_eval(string element) {
+    return evaluate(element);
+}
+
+bool Functions::evaluate(string param) {
+    int index = 0;
+    Functions *initial_function = Functions::get_function(param);
+    if(!initial_function)
+        return false;
+    if(search_inits(initial_function))
+        return true;
+    vector<string> *appropiate_definition = search_params(initial_function);
+    if(!appropiate_definition)
+        return false;
+    unordered_map<string, string> respa = create_map(appropiate_definition, &initial_function->args);
+    string response = modifier(respa, initial_function->name, string_definitions[initial_function->name][0], 0);
+    return get_responses(response, index);
+}
+
+int get_string_response(string input, int &index) {
+    int counter = 0;
+    if(input[index] != '(')
+        return -1;
+    while(index < input.size()) {
+        if(input[index] == '(')
+            counter++;
+        if(input[index] == ')')
+            counter--;
+        if(!counter)
+            return index;
+        if(counter < 0)
+            return -1;
+        index++;
+    }
+    return -1;
+}
+
+bool Functions::get_responses(string param, int &index) {
+    int c_index = index;
+    bool first_param;
+    if(param[index] == '(') {
+        int relative_index = 0;
+        get_string_response(param, index);
+        if(c_index == -1) {
+            error("Incorrect function syntax!");
+        }
+        first_param = get_responses(param.substr(c_index + 1, index - c_index - 1), relative_index);
+    }
+    else {
+        if(!is_function_recursion(param, index, 0)) {
+            error("Incorrect function syntax!");
+        }
+        first_param = evaluate(param.substr(c_index, index - c_index + 1));
+    }
+    index++;
+    while(index < param.size() && (param[index] == '|' || param[index] == '&')) {
+        if(param[index] == '&') {
+            index++;
+            c_index = index;
+            if(param[index] == '(') {
+                int relative_index = 0;
+                get_string_response(param, index);
+                if(c_index == -1) {
+                    error("Incorrect function syntax!");
+                }
+                first_param &= get_responses(param.substr(c_index + 1, index - c_index - 1), relative_index);
+            }
+            else {
+                if(!is_function_recursion(param, index, 0)) {
+                    error("Incorrect function syntax!");
+                }
+                first_param &= evaluate(param.substr(c_index, index - c_index + 1));
+            }
+        }
+        else if(param[index] == '|') {
+            index++;
+            c_index = index;
+            if(param[index] == '(') {
+                int relative_index = 0;
+                get_string_response(param, index);
+                if(c_index == -1) {
+                    error("Incorrect function syntax!");
+                }
+                first_param |= get_responses(param.substr(c_index + 1, index - c_index - 1), relative_index);
+            }
+            else {
+                if(!is_function_recursion(param, index, 0)) {
+                    error("Incorrect function syntax!");
+                }
+                first_param |= evaluate(param.substr(c_index, index - c_index + 1));
+            }
+        }
+        index++;
+    }
+    return first_param;
+}
+
+// bool Functions::processor(string init) {
+//     Functions *current_funct = get_function(init);
+//     if(current_funct->name == "init") {
+//         Functions *query_function = get_function(current_funct->args[1]);
+//         return get_responses(query_function);
+//     }
+//     return true;
+// }
+
+// bool Functions::get_responses(Functions *funct) {
+//     Functions *recharger = find_equalizer(funct);
+//     if(recharger) {
+//         funct = recharger;
+//     }
+//     if(!funct->def)
+//         return search_inits(funct);
+//     Definitions *current_def = funct->def;
+//     bool result = get_responses(current_def->definition_vector[0]);
+//     for(int i = 0; i < current_def->definition_vector_signs.size(); i++) {
+//         char sign = current_def->definition_vector_signs[i];
+//         if(sign == '|') {
+//             bool response = get_responses(current_def->definition_vector[i + 1]);
+//             result |= response;
+//         }
+//         if(sign == '&') {
+//             bool response = get_responses(current_def->definition_vector[i + 1]);
+//             result &= response;
+//         }
+//     }
+//     return result;
+// }
 
 void Functions::deep_copy(Functions *fct) {
     this->name = fct->name;
@@ -427,20 +591,3 @@ bool Functions::search_inits(Functions *current_funct) {
     return false;
 }
 
-int Functions::get_function_index(string mess, int index) {
-    while(index < mess.size() && mess[index] != '(') {
-        if(!isalpha(mess[index]))
-            return -1;
-        index++;
-    }
-    if(index == mess.size())
-        return -1;
-    index++;
-    int c_index = index;
-    string response = get_arguments(mess, index);
-    if(response == "-1")
-        return -1;
-    if(!regex_function(response))
-        return -1;
-    return c_index + response.size();
-}
