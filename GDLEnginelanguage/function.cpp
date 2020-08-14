@@ -1,7 +1,7 @@
 #include "function.h"
 unordered_map<string, int> inits;
 vector<Functions*> predicate_definitions;
-unordered_map<string, string> marker;
+unordered_map<string, vector<string>* > marker;
 unordered_map<string, vector< vector<string> > > var_params;
 unordered_map<string, vector<string> > string_definitions;
 unordered_map<string, bool> does;
@@ -22,7 +22,7 @@ void Functions::add_function_type() {
     else this->function_type = PREDICATE;
 }
 
-Functions *Functions::get_function(string funct) {
+Functions *Functions::get_function(const string &funct) {
     int index = 0;
     Functions *response = get_function_object(funct, index);
     if(index < (int)funct.size() - 1 && !funct.size()) {
@@ -32,7 +32,7 @@ Functions *Functions::get_function(string funct) {
     return response;
 }
 
-Functions *Functions::get_function_object(string input, int &index) {
+Functions *Functions::get_function_object(const string &input, int &index) {
     string function_name = "";
     remove_spaces(input, index);
     while(index < input.size() && (isdigit(input[index]) || isalpha(input[index]) || input[index] == '_')) {
@@ -65,7 +65,7 @@ Functions *Functions::get_function_object(string input, int &index) {
     return function;
 }
 
-string Functions::get_function_argument(string input, int &index) {
+string Functions::get_function_argument(const string &input, int &index) {
     string function_name = "";
     remove_spaces(input, index);
     while(index < input.size() && (isdigit(input[index]) || isalpha(input[index]) || input[index] == '_')) {
@@ -100,7 +100,7 @@ string Functions::get_function_argument(string input, int &index) {
     return response;
 }
 
-string Functions::get_simple_arguments(string input, int &index) {
+string Functions::get_simple_arguments(const string &input, int &index) {
     remove_spaces(input, index);
     string argument = "";
     int c_index = index;
@@ -120,7 +120,7 @@ string Functions::get_simple_arguments(string input, int &index) {
     return argument;
 }
 
-bool Functions::is_function(string input) {
+bool Functions::is_function(const string &input) {
     int index = 0;
     bool is_funct = is_function_recursion(input, index, 0);
     if(index < input.size() - 1)
@@ -128,7 +128,7 @@ bool Functions::is_function(string input) {
     return is_funct;
 }
 
-int Functions::argument_types_function(string argument) {
+int Functions::argument_types_function(string &argument) {
     if(is_integer(argument))
         return NUMBER;
     if(is_variable(argument))
@@ -138,7 +138,7 @@ int Functions::argument_types_function(string argument) {
     return CONSTANT;
 }
 
-bool Functions::is_function_recursion(string input, int &index, int depth) {
+bool Functions::is_function_recursion(const string &input, int &index, int depth) {
     string function_name = "";
     remove_spaces(input, index);
     while(index < input.size() && (isdigit(input[index]) || isalpha(input[index]) || input[index] == '_')) {
@@ -167,7 +167,7 @@ bool Functions::is_function_recursion(string input, int &index, int depth) {
     return true;
 }
 
-bool Functions::is_argument(string input, int &index, int depth) {
+bool Functions::is_argument(const string &input, int &index, int depth) {
     remove_spaces(input, index);
     string argument = "";
     int c_index = index;
@@ -197,7 +197,7 @@ void Functions::show_message() {
     cout << "\n";
 }
 
-void Functions::remove_spaces(string element, int &index) {
+void Functions::remove_spaces(const string &element, int &index) {
     while(index < element.size() && element[index] == ' ')
         index++;
 }
@@ -209,6 +209,22 @@ string Functions::to_string() {
     if(this->args.size())
         full_argument += this->args[this->args.size() - 1];
     return this->name + "(" + full_argument + ")";
+}
+
+bool is_different(vector<string> *arguments, string *name) {
+    if(!marker[(*name)]) {
+        marker[*name] = arguments;
+        return false;
+    }
+    if(marker[(*name)]->size() != arguments->size())
+        return true;
+    for(int i = 0; i < arguments->size(); i++) {
+        if(Functions::argument_types_function((*arguments)[i]) != Functions::argument_types_function((*marker[(*name)])[i])) {
+            return true;
+        }
+    }
+    marker[*name] = arguments;
+    return false;
 }
 
 void Functions::process_line(string input) {
@@ -230,17 +246,21 @@ void Functions::process_line(string input) {
     }
     else
         return ;
-    var_params[first_operator->name].push_back(first_operator->args);
+    string key_map = first_operator->name;
+    if(is_different(&first_operator->args, &first_operator->name)) {
+        error("Multiple definition for function: '" + first_operator->name + "' multiple definitions are only allowed if the parameters are the same type!");
+    }
+    var_params[key_map].push_back(first_operator->args);
     remove_spaces(input, index);
     int cutted_index = input.size() - index;
     string definition_string = input.substr(index, cutted_index);
     first_operator->function_type = PREDICATE;
     definition_string.erase(remove(definition_string.begin(), definition_string.end(), ' '), definition_string.end());
-    string_definitions[first_operator->name].push_back(definition_string);
+    string_definitions[key_map].push_back(definition_string);
     return ;
 }
 
-string modifier(unordered_map<string, string> elems, string function_name, string to_modify, int index) {
+string modifier(unordered_map<string, string> &elems, string &function_name, string &to_modify, int index) {
     char final_str[512] = {0};
     if(!elems.size())
         return to_modify;
@@ -280,17 +300,18 @@ string modifier(unordered_map<string, string> elems, string function_name, strin
 
 vector<string> *search_params(Functions *fct) {
     bool traversed = false;
-    for(int i = 0; i < var_params[fct->name].size(); i++) {
+    string key_map = fct->name;
+    for(int i = 0; i < var_params[key_map].size(); i++) {
         bool checker = true;
         traversed = true;
         for(int j = 0; j < fct->args.size(); j++)
         {
-            if(fct->args.size() != var_params[fct->name][i].size()) {
+            if(fct->args.size() != var_params[key_map][i].size()) {
                 checker = false;
                 break;
             }
             else {
-                if(Functions::argument_types_function(var_params[fct->name][i][j]) != VARIABLE && fct->args[j] != var_params[fct->name][i][j])
+                if(Functions::argument_types_function(var_params[key_map][i][j]) != VARIABLE && fct->args[j] != var_params[key_map][i][j])
                 {
                     checker = false;
                     break;
@@ -298,7 +319,7 @@ vector<string> *search_params(Functions *fct) {
             }
         }
         if(checker) {
-            return &var_params[fct->name][i];
+            return &var_params[key_map][i];
         }
     }
     return NULL;
@@ -313,11 +334,12 @@ unordered_map<string, string> create_map(vector<string> *alpha, vector<string> *
     }
     return response;
 }
+
 bool Functions::func_eval(string element) {
     return evaluate(element);
 }
 
-bool Functions::evaluate(string param) {
+bool Functions::evaluate(const string &param) {
     int index = 0;
     Functions *initial_function = Functions::get_function(param);
     if(!initial_function)
@@ -332,7 +354,7 @@ bool Functions::evaluate(string param) {
     return get_responses(response, index);
 }
 
-int get_string_response(string input, int &index) {
+int get_string_response(const string &input, int &index) {
     int counter = 0;
     if(input[index] != '(')
         return -1;
@@ -350,7 +372,7 @@ int get_string_response(string input, int &index) {
     return -1;
 }
 
-bool get_negation(string param, int &index) {
+bool get_negation(const string &param, int &index) {
     bool response = false;
     while(index < param.size() && param[index] == '~') {
         index++;
@@ -359,7 +381,7 @@ bool get_negation(string param, int &index) {
     return response;
 }
 
-bool Functions::get_responses(string param, int &index) {
+bool Functions::get_responses(const string &param, int &index) {
     bool negative_expression = get_negation(param, index);
     int c_index = index;
     bool first_param;
