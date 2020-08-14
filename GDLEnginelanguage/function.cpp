@@ -438,7 +438,17 @@ int get_string_response(string input, int &index) {
     return -1;
 }
 
+bool get_negation(string param, int &index) {
+    bool response = false;
+    while(index < param.size() && param[index] == '~') {
+        index++;
+        response = !response;
+    }
+    return response;
+}
+
 bool Functions::get_responses(string param, int &index) {
+    bool negative_expression = get_negation(param, index);
     int c_index = index;
     bool first_param;
     if(param[index] == '(') {
@@ -447,18 +457,20 @@ bool Functions::get_responses(string param, int &index) {
         if(c_index == -1) {
             error("Incorrect function syntax!");
         }
-        first_param = get_responses(param.substr(c_index + 1, index - c_index - 1), relative_index);
+        first_param = (negative_expression ^ get_responses(param.substr(c_index + 1, index - c_index - 1), relative_index));
     }
     else {
         if(!is_function_recursion(param, index, 0)) {
             error("Incorrect function syntax!");
         }
-        first_param = evaluate(param.substr(c_index, index - c_index + 1));
+        first_param = (negative_expression ^ evaluate(param.substr(c_index, index - c_index + 1)));
     }
     index++;
+    negative_expression = get_negation(param, index);
     while(index < param.size() && (param[index] == '|' || param[index] == '&')) {
         if(param[index] == '&') {
             index++;
+            negative_expression = get_negation(param, index);
             c_index = index;
             if(param[index] == '(') {
                 int relative_index = 0;
@@ -466,17 +478,18 @@ bool Functions::get_responses(string param, int &index) {
                 if(c_index == -1) {
                     error("Incorrect function syntax!");
                 }
-                first_param &= get_responses(param.substr(c_index + 1, index - c_index - 1), relative_index);
+                first_param &= negative_expression ^ get_responses(param.substr(c_index + 1, index - c_index - 1), relative_index);
             }
             else {
                 if(!is_function_recursion(param, index, 0)) {
                     error("Incorrect function syntax!");
                 }
-                first_param &= evaluate(param.substr(c_index, index - c_index + 1));
+                first_param &= negative_expression ^ evaluate(param.substr(c_index, index - c_index + 1));
             }
         }
         else if(param[index] == '|') {
             index++;
+            negative_expression = get_negation(param, index);
             c_index = index;
             if(param[index] == '(') {
                 int relative_index = 0;
@@ -484,13 +497,13 @@ bool Functions::get_responses(string param, int &index) {
                 if(c_index == -1) {
                     error("Incorrect function syntax!");
                 }
-                first_param |= get_responses(param.substr(c_index + 1, index - c_index - 1), relative_index);
+                first_param |= negative_expression ^ get_responses(param.substr(c_index + 1, index - c_index - 1), relative_index);
             }
             else {
                 if(!is_function_recursion(param, index, 0)) {
                     error("Incorrect function syntax!");
                 }
-                first_param |= evaluate(param.substr(c_index, index - c_index + 1));
+                first_param |= negative_expression ^ evaluate(param.substr(c_index, index - c_index + 1));
             }
         }
         index++;
