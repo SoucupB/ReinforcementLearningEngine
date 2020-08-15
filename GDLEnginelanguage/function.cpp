@@ -227,6 +227,16 @@ bool is_different(vector<string> *arguments, string *name) {
     return false;
 }
 
+bool add_special_function(Functions *input) {
+    if(input->name == "init" && input->args.size() == 1)
+    {
+        inits[Functions::get_function(input->args[0])->to_string()] = 1;
+        input->function_type = INIT;
+        return true;
+    }
+    return false;
+}
+
 void Functions::process_line(string input) {
     int index = 0, c_index = index;
     if(!is_function_recursion(input, index, 0)) {
@@ -234,12 +244,7 @@ void Functions::process_line(string input) {
     }
     Functions *first_operator = get_function(input.substr(c_index, index - c_index + 1));
     index++;
-    if(first_operator->name == "init")
-    {
-        inits[get_function(first_operator->args[0])->to_string()] = 1;
-        first_operator->function_type = INIT;
-        return ;
-    }
+    add_special_function(first_operator);
     remove_spaces(input, index);
     if(index + 1 < input.size() && input[index] == ':' && input[index + 1] == '-') {
         index += 2;
@@ -261,12 +266,10 @@ void Functions::process_line(string input) {
 }
 
 string modifier(unordered_map<string, string> &elems, string &function_name, string &to_modify, int index) {
-    //cout << to_modify << " ";
     char final_str[512] = {0};
     if(!elems.size())
         return to_modify;
-    int char_index = 0, indexes[512], strings[512], str_indexes = 0;
-   // cout << var_params[function_name][index].size() << " ";
+    int char_index = 0, indexes[512] = {0}, strings[512] = {0}, str_indexes = 0;
     for(int i = 0; i < to_modify.size(); i++) {
         for(int j = 0; j < var_params[function_name][index].size(); j++) {
             bool checker = 1;
@@ -285,7 +288,7 @@ string modifier(unordered_map<string, string> &elems, string &function_name, str
     }
     int k = 0;
     for(int i = 0; i < to_modify.size(); i++) {
-        if(i != indexes[k]) {
+        if(k >= i || i != indexes[k]) {
             final_str[char_index++] = to_modify[i];
         }
         else {
@@ -297,7 +300,6 @@ string modifier(unordered_map<string, string> &elems, string &function_name, str
             k++;
         }
     }
-   // cout << "\n";
     return string(final_str);
 }
 
@@ -343,6 +345,13 @@ bool Functions::func_eval(string element) {
     return evaluate(element);
 }
 
+bool is_special_function(Functions *function) {
+    if(function->name == "init") {
+        return true;
+    }
+    return false;
+}
+
 bool Functions::evaluate(const string &param) {
     Functions *initial_function = Functions::get_function(param);
     for(int i = 0; i < initial_function->args.size(); i++) {
@@ -350,22 +359,35 @@ bool Functions::evaluate(const string &param) {
         if(evaluation_function != "")
             initial_function->args[i] = evaluation_function;
     }
-    if(!initial_function)
+    if(!initial_function) {
+        free(initial_function);
         return false;
-    if(search_inits(initial_function))
+    }
+    if(is_special_function(initial_function)) {
+        return add_special_function(initial_function);
+    }
+    if(search_inits(initial_function)) {
+        free(initial_function);
         return true;
+    }
     bool final_response = false;
     vector<vector<string>* > appropiate_definition = search_params(initial_function);
     for(int i = 0; i < appropiate_definition.size(); i++) {
         int index = 0;
-        if(!appropiate_definition[i])
+        if(!appropiate_definition[i]) {
+            free(initial_function);
             return false;
+        }
         unordered_map<string, string> respa = create_map(appropiate_definition[i], &initial_function->args);
+       // cout << initial_function->to_string() << " " << string_definitions[initial_function->name][i] << "\n";
         string response = modifier(respa, initial_function->name, string_definitions[initial_function->name][i], i);
         final_response = get_responses(response, index);
-        if(final_response)
+        if(final_response) {
+            free(initial_function);
             return final_response;
+        }
     }
+    free(initial_function);
     return final_response;
 }
 
