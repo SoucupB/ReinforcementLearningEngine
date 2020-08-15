@@ -28,4 +28,5 @@ void error(string error);
 bool is_integer(string input);
 bool is_variable(string input);
 bool is_function_var(string input);
+bool is_arithmetic_sign(char element);
 int min(int a, int b);

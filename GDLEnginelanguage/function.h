@@ -5,6 +5,7 @@
 #include "utils.h"
 #include <unordered_map>
 #include <algorithm>
+#include "expressions.h"
 using namespace std;
 class Functions {
 public:

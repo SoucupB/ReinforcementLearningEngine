@@ -24,3 +24,9 @@ bool is_function_var(string input) {
 int min(int a, int b) {
     return a < b ? a : b;
 }
+
+bool is_arithmetic_sign(char element) {
+    if(element == '+' || element == '-' || element == '*' || element == '/')
+        return true;
+    return false;
+}

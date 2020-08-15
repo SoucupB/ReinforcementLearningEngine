@@ -104,7 +104,7 @@ string Functions::get_simple_arguments(const string &input, int &index) {
     remove_spaces(input, index);
     string argument = "";
     int c_index = index;
-    while(index < input.size() && (isdigit(input[index]) || isalpha(input[index]))) {
+    while(index < input.size() && (isdigit(input[index]) || is_arithmetic_sign(input[index]) || isalpha(input[index]))) {
         argument += input[index];
         index++;
     }
@@ -171,7 +171,7 @@ bool Functions::is_argument(const string &input, int &index, int depth) {
     remove_spaces(input, index);
     string argument = "";
     int c_index = index;
-    while(index < input.size() && (isdigit(input[index]) || isalpha(input[index]))) {
+    while(index < input.size() && (isdigit(input[index]) || is_arithmetic_sign(input[index]) || isalpha(input[index]))) {
         argument += input[index];
         index++;
     }
@@ -261,10 +261,12 @@ void Functions::process_line(string input) {
 }
 
 string modifier(unordered_map<string, string> &elems, string &function_name, string &to_modify, int index) {
+    //cout << to_modify << " ";
     char final_str[512] = {0};
     if(!elems.size())
         return to_modify;
     int char_index = 0, indexes[512], strings[512], str_indexes = 0;
+   // cout << var_params[function_name][index].size() << " ";
     for(int i = 0; i < to_modify.size(); i++) {
         for(int j = 0; j < var_params[function_name][index].size(); j++) {
             bool checker = 1;
@@ -295,12 +297,14 @@ string modifier(unordered_map<string, string> &elems, string &function_name, str
             k++;
         }
     }
+   // cout << "\n";
     return string(final_str);
 }
 
-vector<string> *search_params(Functions *fct) {
+vector< vector<string> *> search_params(Functions *fct) {
     bool traversed = false;
     string key_map = fct->name;
+    vector< vector<string> *> response;
     for(int i = 0; i < var_params[key_map].size(); i++) {
         bool checker = true;
         traversed = true;
@@ -319,10 +323,10 @@ vector<string> *search_params(Functions *fct) {
             }
         }
         if(checker) {
-            return &var_params[key_map][i];
+            response.push_back(&var_params[key_map][i]);
         }
     }
-    return NULL;
+    return response;
 }
 
 unordered_map<string, string> create_map(vector<string> *alpha, vector<string> *beta) {
@@ -340,18 +344,29 @@ bool Functions::func_eval(string element) {
 }
 
 bool Functions::evaluate(const string &param) {
-    int index = 0;
     Functions *initial_function = Functions::get_function(param);
+    for(int i = 0; i < initial_function->args.size(); i++) {
+        string evaluation_function = evaluate_expression(initial_function->args[i]);
+        if(evaluation_function != "")
+            initial_function->args[i] = evaluation_function;
+    }
     if(!initial_function)
         return false;
     if(search_inits(initial_function))
         return true;
-    vector<string> *appropiate_definition = search_params(initial_function);
-    if(!appropiate_definition)
-        return false;
-    unordered_map<string, string> respa = create_map(appropiate_definition, &initial_function->args);
-    string response = modifier(respa, initial_function->name, string_definitions[initial_function->name][0], 0);
-    return get_responses(response, index);
+    bool final_response = false;
+    vector<vector<string>* > appropiate_definition = search_params(initial_function);
+    for(int i = 0; i < appropiate_definition.size(); i++) {
+        int index = 0;
+        if(!appropiate_definition[i])
+            return false;
+        unordered_map<string, string> respa = create_map(appropiate_definition[i], &initial_function->args);
+        string response = modifier(respa, initial_function->name, string_definitions[initial_function->name][i], i);
+        final_response = get_responses(response, index);
+        if(final_response)
+            return final_response;
+    }
+    return final_response;
 }
 
 int get_string_response(const string &input, int &index) {
@@ -385,6 +400,7 @@ bool Functions::get_responses(const string &param, int &index) {
     bool negative_expression = get_negation(param, index);
     int c_index = index;
     bool first_param;
+  //  cout << param << "\n";
     if(param[index] == '(') {
         int relative_index = 0;
         get_string_response(param, index);
@@ -395,7 +411,7 @@ bool Functions::get_responses(const string &param, int &index) {
     }
     else {
         if(!is_function_recursion(param, index, 0)) {
-            error("Incorrect function syntax!");
+            error("Incorrect function syntax! aa");
         }
         first_param = (negative_expression ^ evaluate(param.substr(c_index, index - c_index + 1)));
     }
