@@ -2,11 +2,12 @@
 unordered_map<string, int> inits;
 vector<Functions*> predicate_definitions;
 unordered_map<string, vector<string>* > marker;
-unordered_map<string, vector< vector<string> > > var_params;
-unordered_map<string, vector<string> > string_definitions;
+unordered_map<string, vector< vector<string> > > var_params, legal_params, action_params;
+unordered_map<string, vector<string> > string_definitions, actions, legal;
 unordered_map<string, bool> does;
-
-Functions *last_param = NULL;
+vector<string> player_names;
+unordered_map<string*, bool> first_player_legality, second_player_legality, first_player_action, second_player_action;
+vector<string*> first_action_names, second_action_names;
 
 void Functions::add_function_type() {
     if(this->name == "init")
@@ -227,6 +228,11 @@ bool is_different(vector<string> *arguments, string *name) {
     return false;
 }
 
+void transform(Functions *first, Functions *second) {
+    inits[first->to_string()] = false;
+    inits[second->to_string()] = true;
+}
+
 bool add_special_function(Functions *input) {
     if(input->name == "init" && input->args.size() == 1)
     {
@@ -234,7 +240,62 @@ bool add_special_function(Functions *input) {
         input->function_type = INIT;
         return true;
     }
+    if(input->name == "role" && input->args.size() == 1)
+    {
+        if(player_names.size() >= 2)
+        {
+            error("Too many roles, only 2 are supported!");
+        }
+        player_names.push_back(input->args[0]);
+        return true;
+    }
+    if(input->name == "next") {
+        if(player_names.size() != 2)
+        {
+            error("Wrong number of parameters for next!");
+        }
+        Functions *first = Functions::get_function(input->args[0]), *second = Functions::get_function(input->args[1]);
+        if(!Functions::search_inits(first))
+            return false;
+        transform(first, second);
+        return true;
+    }
     return false;
+}
+
+bool is_special_function(Functions *function) {
+    if(function->name == "init") {
+        return true;
+    }
+    if(function->name == "role") {
+        return true;
+    }
+    if(function->name == "next")
+        return true;
+    return false;
+}
+
+int is_legal_or_actions(Functions *funct) {
+    if(funct->name == "legal")
+        return LEGAL;
+    if(funct->name == "does")
+        return ACTION_PREDICATE;
+    return WRONG;
+}
+
+void add_legality_or_actions(Functions *funct) {
+    if(funct->name == "legal" && funct->args.size() != 2) {
+        error("Wrong number of arguments for legality");
+    }
+    if(funct->name == "does") {
+        if(funct->args.size() != 2) {
+            error("Wrong number of arguments for actions");
+        }
+        if(funct->args[0] == player_names[0])
+            first_action_names.push_back(&funct->args[1]);
+        else
+            second_action_names.push_back(&funct->args[1]);
+    }
 }
 
 void Functions::process_line(string input) {
@@ -242,30 +303,49 @@ void Functions::process_line(string input) {
     if(!is_function_recursion(input, index, 0)) {
         error("Syntax error");
     }
-    Functions *first_operator = get_function(input.substr(c_index, index - c_index + 1));
+    Functions *first_operator = get_function(input.substr(c_index, index - c_index + 1)), *c_first_operator = NULL;
     index++;
-    add_special_function(first_operator);
+    if(is_special_function(first_operator)) {
+        add_special_function(first_operator);
+        return ;
+    }
+    add_legality_or_actions(first_operator);
     remove_spaces(input, index);
     if(index + 1 < input.size() && input[index] == ':' && input[index + 1] == '-') {
         index += 2;
     }
     else
         return ;
-    string key_map = first_operator->name;
     if(is_different(&first_operator->args, &first_operator->name)) {
         error("Multiple definition for function: '" + first_operator->name + "' multiple definitions are only allowed if the parameters are the same type!");
     }
-    var_params[key_map].push_back(first_operator->args);
     remove_spaces(input, index);
     int cutted_index = input.size() - index;
     string definition_string = input.substr(index, cutted_index);
     first_operator->function_type = PREDICATE;
     definition_string.erase(remove(definition_string.begin(), definition_string.end(), ' '), definition_string.end());
-    string_definitions[key_map].push_back(definition_string);
+    if(is_legal_or_actions(first_operator) != WRONG)
+        c_first_operator = get_function(first_operator->args[1]);
+    else
+        c_first_operator = first_operator;
+    switch(is_legal_or_actions(first_operator)) {
+        case LEGAL:
+            legal[c_first_operator->name].push_back(definition_string);
+            legal_params[c_first_operator->name].push_back(c_first_operator->args);
+            break;
+        case ACTION_PREDICATE:
+            actions[c_first_operator->name].push_back(definition_string);
+            action_params[c_first_operator->name].push_back(c_first_operator->args);
+            break;
+        default:
+            string_definitions[c_first_operator->name].push_back(definition_string);
+            var_params[c_first_operator->name].push_back(c_first_operator->args);
+            break;
+    }
     return ;
 }
 
-string modifier(unordered_map<string, string> &elems, string &function_name, string &to_modify, int index) {
+string modifier(unordered_map<string, string> &elems, string &function_name, string &to_modify, int index, unordered_map<string, vector< vector<string> > > &var_params) {
     char final_str[512] = {0};
     if(!elems.size())
         return to_modify;
@@ -303,7 +383,7 @@ string modifier(unordered_map<string, string> &elems, string &function_name, str
     return string(final_str);
 }
 
-vector< vector<string> *> search_params(Functions *fct) {
+vector< vector<string> *> search_params(Functions *fct, unordered_map<string, vector< vector<string> > > &var_params) {
     bool traversed = false;
     string key_map = fct->name;
     vector< vector<string> *> response;
@@ -345,11 +425,28 @@ bool Functions::func_eval(string element) {
     return evaluate(element);
 }
 
-bool is_special_function(Functions *function) {
-    if(function->name == "init") {
+bool is_action(Functions *input) {
+    if(actions[input->name].size()) {
         return true;
     }
     return false;
+}
+
+bool process_actions(Functions *input) {
+    bool legal_response = true;
+    if(legal[input->name].size()) {
+        int index = 0;
+        vector<vector<string>* > appropiate_definition = search_params(input, legal_params);
+        unordered_map<string, string> respa = create_map(appropiate_definition[0], &input->args);
+        string response = modifier(respa, input->name, legal[input->name][0], 0, legal_params);
+        legal_response = Functions::get_responses(response, index);
+    }
+    int index = 0;
+    if(!legal_response) return false;
+    vector<vector<string>* > appropiate_definition = search_params(input, action_params);
+    unordered_map<string, string> respa = create_map(appropiate_definition[0], &input->args);
+    string response = modifier(respa, input->name, actions[input->name][0], 0, action_params);
+    return Functions::get_responses(response, index);
 }
 
 bool Functions::evaluate(const string &param) {
@@ -366,12 +463,15 @@ bool Functions::evaluate(const string &param) {
     if(is_special_function(initial_function)) {
         return add_special_function(initial_function);
     }
+    if(is_action(initial_function)) {
+        return process_actions(initial_function);
+    }
     if(search_inits(initial_function)) {
         free(initial_function);
         return true;
     }
     bool final_response = false;
-    vector<vector<string>* > appropiate_definition = search_params(initial_function);
+    vector<vector<string>* > appropiate_definition = search_params(initial_function, var_params);
     for(int i = 0; i < appropiate_definition.size(); i++) {
         int index = 0;
         if(!appropiate_definition[i]) {
@@ -379,8 +479,7 @@ bool Functions::evaluate(const string &param) {
             return false;
         }
         unordered_map<string, string> respa = create_map(appropiate_definition[i], &initial_function->args);
-       // cout << initial_function->to_string() << " " << string_definitions[initial_function->name][i] << "\n";
-        string response = modifier(respa, initial_function->name, string_definitions[initial_function->name][i], i);
+        string response = modifier(respa, initial_function->name, string_definitions[initial_function->name][i], i, var_params);
         final_response = get_responses(response, index);
         if(final_response) {
             free(initial_function);
@@ -422,7 +521,6 @@ bool Functions::get_responses(const string &param, int &index) {
     bool negative_expression = get_negation(param, index);
     int c_index = index;
     bool first_param;
-  //  cout << param << "\n";
     if(param[index] == '(') {
         int relative_index = 0;
         get_string_response(param, index);
