@@ -16,8 +16,8 @@ vector<string> input_file = {"role(xplayer)",
                                  "rowscols(Player) :- row(Player, 1) | row(Player, 2) | row(Player, 3)",
                                  "diagonal(Player) :- cell(1, 1, Player) & cell(2, 2, Player) & cell(3, 3, Player)",
                                  "diagonal(Player) :- cell(1, 3, Player) & cell(2, 2, Player) & cell(3, 1, Player)",
-                                 "is_full(b) :- ~cell(1, 1, b) & ~cell(1, 2, b) & ~cell(1, 3, b) & ~cell(2, 1, b) & ~cell(2, 2, b) & ~cell(2, 3, b) & ~cell(3, 1, b) & ~cell(3, 2, b) & ~cell(3, 3, b)",
-                                 "draw() :- ~diagonal(x) & ~diagonal(o) & ~rowscols(x) & ~rowscols(o) & is_full(b)",
+                                 "is_full() :- ~cell(1, 1, b) & ~cell(1, 2, b) & ~cell(1, 3, b) & ~cell(2, 1, b) & ~cell(2, 2, b) & ~cell(2, 3, b) & ~cell(3, 1, b) & ~cell(3, 2, b) & ~cell(3, 3, b)",
+                                 "draw() :- ~diagonal(x) & ~diagonal(o) & ~rowscols(x) & ~rowscols(o) & is_full()",
                                  "goal_first() :- rowscols(x) | diagonal(x)",
                                  "goal_last() :- rowscols(o) | diagonal(o)",
                                  "terminal() :- goal_first() | goal_last() | draw()",
@@ -74,6 +74,8 @@ void test_random_tic_tac() {
             s++;
         if(Functions::evaluate("draw()"))
             d++;
+       // show_all_inits();
+       // exit(0);
         load_state();
         index++;
     }

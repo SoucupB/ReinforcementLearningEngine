@@ -48,6 +48,8 @@ void Functions::add_function_type() {
         this->function_type = DOES;
     else if(this->name == "next")
         this->function_type = NEXT;
+    else if(this->name == "role")
+        this->function_type = ROLE;
     else this->function_type = PREDICATE;
 }
 
@@ -58,6 +60,7 @@ Functions *Functions::get_function(const string &funct) {
         free(response);
         return NULL;
     }
+    response->add_function_type();
     return response;
 }
 
@@ -326,14 +329,23 @@ bool add_special_function(Functions *&input) {
 }
 
 bool is_special_function(Functions *function) {
-    if(function->name == "init") {
+    // if(function->name == "init") {
+    //     return true;
+    // }
+    // if(function->name == "role") {
+    //     return true;
+    // }
+    // if(function->name == "next")
+    //     return true;
+    if(function->function_type == INIT) {
         return true;
     }
-    if(function->name == "role") {
+    if(function->function_type == ROLE) {
         return true;
     }
-    if(function->name == "next")
+    if(function->function_type == NEXT) {
         return true;
+    }
     return false;
 }
 
@@ -406,14 +418,6 @@ void Functions::process_line(string input) {
             var_params[c_first_operator->name].push_back(c_first_operator->args);
             break;
     }
-    // if(c_first_operator != first_operator) {
-    //     Functions::free_mem(first_operator);
-    //     Functions::free_mem(c_first_operator);
-    // }
-    // else {
-    //     Functions::free_mem(first_operator);
-    //   // Functions::free_mem(c_first_operator);
-    // }
     return ;
 }
 
@@ -533,7 +537,7 @@ bool Functions::evaluate(const string &param) {
     Functions *initial_function = Functions::get_function(param);
     for(int i = 0; i < initial_function->args.size(); i++) {
         string evaluation_function = evaluate_expression(initial_function->args[i]);
-        if(evaluation_function != "")
+        if(evaluation_function.size())
             initial_function->args[i] = evaluation_function;
     }
     if(!initial_function) {

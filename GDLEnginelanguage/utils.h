@@ -25,7 +25,8 @@ enum {
     AND,
     OR,
     NO,
-    WRONG
+    WRONG,
+    ROLE
 };
 
 
