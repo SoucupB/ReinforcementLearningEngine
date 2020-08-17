@@ -8,6 +8,19 @@ unordered_map<string, bool> does;
 vector<string> player_names;
 unordered_map<string*, bool> first_player_legality, second_player_legality, first_player_action, second_player_action;
 vector<string*> first_action_names, second_action_names;
+unordered_map<string, bool> *inits_vars = new unordered_map<string, bool>;
+
+vector<string*> *get_first_player_actions() {
+    return &first_action_names;
+}
+
+vector<string*> *get_second_player_actions() {
+    return &second_action_names;
+}
+
+unordered_map<string, bool> *get_map() {
+    return inits_vars;
+}
 
 void Functions::add_function_type() {
     if(this->name == "init")
@@ -31,6 +44,12 @@ Functions *Functions::get_function(const string &funct) {
         return NULL;
     }
     return response;
+}
+
+void show_all_inits() {
+    for(auto& it: inits) {
+        cout << it.first << "\n";
+    }
 }
 
 Functions *Functions::get_function_object(const string &input, int &index) {
@@ -229,15 +248,24 @@ bool is_different(vector<string> *arguments, string *name) {
 }
 
 void transform(Functions *first, Functions *second) {
-    inits[first->to_string()] = false;
+    inits.erase(first->to_string());
     inits[second->to_string()] = true;
+}
+
+void add_params(vector<string> args) {
+    for(int i = 0; i < args.size(); i++) {
+        (*inits_vars)[args[i]] = true;
+    }
 }
 
 bool add_special_function(Functions *input) {
     if(input->name == "init" && input->args.size() == 1)
     {
-        inits[Functions::get_function(input->args[0])->to_string()] = 1;
+        Functions *response = Functions::get_function(input->args[0]);
+        inits[response->to_string()] = 1;
         input->function_type = INIT;
+        add_params(response->args);
+        free(response);
         return true;
     }
     if(input->name == "role" && input->args.size() == 1)
@@ -432,17 +460,21 @@ bool is_action(Functions *input) {
     return false;
 }
 
-bool process_actions(Functions *input) {
-    bool legal_response = true;
+bool is_action_legal(Functions *input) {
     if(legal[input->name].size()) {
         int index = 0;
         vector<vector<string>* > appropiate_definition = search_params(input, legal_params);
         unordered_map<string, string> respa = create_map(appropiate_definition[0], &input->args);
         string response = modifier(respa, input->name, legal[input->name][0], 0, legal_params);
-        legal_response = Functions::get_responses(response, index);
+        return Functions::get_responses(response, index);
     }
+    return true;
+}
+
+bool process_actions(Functions *input) {
+    if(!is_action_legal(input))
+        return false;
     int index = 0;
-    if(!legal_response) return false;
     vector<vector<string>* > appropiate_definition = search_params(input, action_params);
     unordered_map<string, string> respa = create_map(appropiate_definition[0], &input->args);
     string response = modifier(respa, input->name, actions[input->name][0], 0, action_params);
@@ -582,7 +614,8 @@ bool Functions::get_responses(const string &param, int &index) {
 }
 
 bool Functions::search_inits(Functions *current_funct) {
-    if(inits[current_funct->to_string()])
+    string fct_str = current_funct->to_string();
+    if(inits.find(fct_str) != inits.end())
         return true;
     return false;
 }
