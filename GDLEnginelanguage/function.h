@@ -51,6 +51,8 @@ bool is_different(vector<string> *arguments, string *name);
 vector<string*> *get_first_player_actions();
 vector<string*> *get_second_player_actions();
 unordered_map<string, bool> *get_map();
+void save_state();
+void load_state();
 
 //trainer.cpp
 void show_all_inits();

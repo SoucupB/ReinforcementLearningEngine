@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <chrono>
+#include <cstdint>
 using namespace std;
 
 enum {
@@ -30,3 +32,4 @@ bool is_variable(string input);
 bool is_function_var(string input);
 bool is_arithmetic_sign(char element);
 int min(int a, int b);
+uint64_t timeSinceEpochMillisec();

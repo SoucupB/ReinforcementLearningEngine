@@ -1,5 +1,5 @@
 #include "function.h"
-unordered_map<string, int> inits;
+unordered_map<string, int> inits, c_inits;
 vector<Functions*> predicate_definitions;
 unordered_map<string, vector<string>* > marker;
 unordered_map<string, vector< vector<string> > > var_params, legal_params, action_params;
@@ -20,6 +20,14 @@ vector<string*> *get_second_player_actions() {
 
 unordered_map<string, bool> *get_map() {
     return inits_vars;
+}
+
+void save_state() {
+    c_inits = inits;
+}
+
+void load_state() {
+    inits = c_inits;
 }
 
 void Functions::add_function_type() {
@@ -171,13 +179,15 @@ bool Functions::is_function_recursion(const string &input, int &index, int depth
         return false;
     if(index == input.size() || input[index] != '(')
         return false;
+    index++;
     while(index < input.size() && input[index] != ')') {
-        index++;
         bool is_arg = is_argument(input, index, depth + 1);
         if(!is_arg)
             return false;
         if(input[index] != ',' && input[index] != ')')
             return false;
+        if(input[index] != ')')
+            index++;
     }
     if(index == input.size())
         return false;

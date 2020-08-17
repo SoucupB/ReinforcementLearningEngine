@@ -3,12 +3,15 @@
 int mad(int a, int b) {
     return a + b;
 }
+vector<string> stated_variables;
 
 vector<string> get_total_actions(vector<string*> *actions) {
-    vector<string> stated_variables, total_triess;
+    vector<string> total_triess;
     unordered_map<string, bool> *mapper = get_map();
-    for(auto& it: *mapper) {
-        stated_variables.push_back(it.first);
+    if(!stated_variables.size()) {
+        for(auto& it: *mapper) {
+            stated_variables.push_back(it.first);
+        }
     }
     for(int i = 0; i < actions->size(); i++) {
         Functions *current_func = Functions::get_function(*(*actions)[i]);
