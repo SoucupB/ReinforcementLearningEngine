@@ -34,6 +34,7 @@ public:
     static bool evaluate(const string &param);
     string to_string();
     static bool get_responses(const string &param, int &index);
+    static void free_mem(Functions *&func);
 };
 
 //function.cpp
@@ -41,22 +42,23 @@ int get_string_response(const string &input, int &index);
 string modifier(unordered_map<string, string> &elems, string &function_name, string &to_modify, int index);
 bool is_action(Functions *input);
 bool is_action_legal(Functions *input);
-bool process_actions(Functions *input);
+bool process_actions(Functions *&input);
 bool get_negation(const string &param, int &index);
 void add_legality_or_actions(Functions *funct);
 int is_legal_or_actions(Functions *funct);
 bool is_special_function(Functions *function);
-bool add_special_function(Functions *input);
-bool is_different(vector<string> *arguments, string *name);
+bool add_special_function(Functions *&input);
+bool is_different(vector<string> arguments, string name);
 vector<string*> *get_first_player_actions();
 vector<string*> *get_second_player_actions();
 unordered_map<string, bool> *get_map();
 void save_state();
 void load_state();
+unordered_map<string, string> create_map(vector<string> &alpha, vector<string> &beta);
 
 //trainer.cpp
 void show_all_inits();
 vector<string> get_total_actions();
 string get_random_action_first_player();
 string get_random_action_second_player();
-void get_strings(Functions *current_function, vector<string> &constants, int k, vector<string> *response);
+void get_strings(Functions *current_function, vector<string> &constants, int k, vector<string> &response);

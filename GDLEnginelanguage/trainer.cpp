@@ -15,16 +15,16 @@ vector<string> get_total_actions(vector<string*> *actions) {
     }
     for(int i = 0; i < actions->size(); i++) {
         Functions *current_func = Functions::get_function(*(*actions)[i]);
-        get_strings(current_func, stated_variables, 0, &total_triess);
-        free(current_func);
+        get_strings(current_func, stated_variables, 0, total_triess);
+        Functions::free_mem(current_func);
     }
     return total_triess;
 }
 
-void get_strings(Functions *current_function, vector<string> &constants, int k, vector<string> *response) {
+void get_strings(Functions *current_function, vector<string> &constants, int k, vector<string> &response) {
     if(k == current_function->args.size()) {
         if(is_action_legal(current_function)) {
-            response->push_back(current_function->to_string());
+            response.push_back(current_function->to_string());
         }
         return ;
     }

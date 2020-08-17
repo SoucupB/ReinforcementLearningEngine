@@ -1,7 +1,7 @@
 #include "function.h"
 unordered_map<string, int> inits, c_inits;
 vector<Functions*> predicate_definitions;
-unordered_map<string, vector<string>* > marker;
+unordered_map<string, vector<string> > marker;
 unordered_map<string, vector< vector<string> > > var_params, legal_params, action_params;
 unordered_map<string, vector<string> > string_definitions, actions, legal;
 unordered_map<string, bool> does;
@@ -57,6 +57,13 @@ Functions *Functions::get_function(const string &funct) {
 void show_all_inits() {
     for(auto& it: inits) {
         cout << it.first << "\n";
+    }
+}
+
+void Functions::free_mem(Functions *&func) {
+    if(func) {
+        delete func;
+        func = NULL;
     }
 }
 
@@ -241,19 +248,19 @@ string Functions::to_string() {
     return this->name + "(" + full_argument + ")";
 }
 
-bool is_different(vector<string> *arguments, string *name) {
-    if(!marker[(*name)]) {
-        marker[*name] = arguments;
+bool is_different(vector<string> arguments, string name) {
+    if(!marker[name].size()) {
+        marker[name] = arguments;
         return false;
     }
-    if(marker[(*name)]->size() != arguments->size())
+    if(marker[name].size() != arguments.size())
         return true;
-    for(int i = 0; i < arguments->size(); i++) {
-        if(Functions::argument_types_function((*arguments)[i]) != Functions::argument_types_function((*marker[(*name)])[i])) {
+    for(int i = 0; i < arguments.size(); i++) {
+        if(Functions::argument_types_function(arguments[i]) != Functions::argument_types_function(marker[name][i])) {
             return true;
         }
     }
-    marker[*name] = arguments;
+    marker[name] = arguments;
     return false;
 }
 
@@ -268,14 +275,15 @@ void add_params(vector<string> args) {
     }
 }
 
-bool add_special_function(Functions *input) {
+bool add_special_function(Functions *&input) {
     if(input->name == "init" && input->args.size() == 1)
     {
         Functions *response = Functions::get_function(input->args[0]);
         inits[response->to_string()] = 1;
         input->function_type = INIT;
         add_params(response->args);
-        free(response);
+        Functions::free_mem(response);
+        Functions::free_mem(input);
         return true;
     }
     if(input->name == "role" && input->args.size() == 1)
@@ -285,6 +293,7 @@ bool add_special_function(Functions *input) {
             error("Too many roles, only 2 are supported!");
         }
         player_names.push_back(input->args[0]);
+        Functions::free_mem(input);
         return true;
     }
     if(input->name == "next") {
@@ -293,11 +302,19 @@ bool add_special_function(Functions *input) {
             error("Wrong number of parameters for next!");
         }
         Functions *first = Functions::get_function(input->args[0]), *second = Functions::get_function(input->args[1]);
-        if(!Functions::search_inits(first))
+        if(!Functions::search_inits(first)) {
+            Functions::free_mem(second);
+            Functions::free_mem(first);
+            Functions::free_mem(input);
             return false;
+        }
         transform(first, second);
+        Functions::free_mem(second);
+        Functions::free_mem(first);
+        Functions::free_mem(input);
         return true;
     }
+    Functions::free_mem(input);
     return false;
 }
 
@@ -352,9 +369,11 @@ void Functions::process_line(string input) {
     if(index + 1 < input.size() && input[index] == ':' && input[index + 1] == '-') {
         index += 2;
     }
-    else
+    else {
+        Functions::free_mem(first_operator);
         return ;
-    if(is_different(&first_operator->args, &first_operator->name)) {
+    }
+    if(is_different(first_operator->args, first_operator->name)) {
         error("Multiple definition for function: '" + first_operator->name + "' multiple definitions are only allowed if the parameters are the same type!");
     }
     remove_spaces(input, index);
@@ -380,6 +399,14 @@ void Functions::process_line(string input) {
             var_params[c_first_operator->name].push_back(c_first_operator->args);
             break;
     }
+    // if(c_first_operator != first_operator) {
+    //     Functions::free_mem(first_operator);
+    //     Functions::free_mem(c_first_operator);
+    // }
+    // else {
+    //     Functions::free_mem(first_operator);
+    //   // Functions::free_mem(c_first_operator);
+    // }
     return ;
 }
 
@@ -421,10 +448,10 @@ string modifier(unordered_map<string, string> &elems, string &function_name, str
     return string(final_str);
 }
 
-vector< vector<string> *> search_params(Functions *fct, unordered_map<string, vector< vector<string> > > &var_params) {
+vector< vector<string>* > search_params(Functions *fct, unordered_map<string, vector< vector<string> > > &var_params) {
     bool traversed = false;
     string key_map = fct->name;
-    vector< vector<string> *> response;
+    vector< vector<string>* > response;
     for(int i = 0; i < var_params[key_map].size(); i++) {
         bool checker = true;
         traversed = true;
@@ -449,12 +476,12 @@ vector< vector<string> *> search_params(Functions *fct, unordered_map<string, ve
     return response;
 }
 
-unordered_map<string, string> create_map(vector<string> *alpha, vector<string> *beta) {
+unordered_map<string, string> create_map(vector<string> &alpha, vector<string> &beta) {
     unordered_map<string, string> response;
-    if(alpha->size() != beta->size())
+    if(alpha.size() != beta.size())
         return response;
-    for(int i = 0; i < alpha->size(); i++) {
-        response[(*alpha)[i]] = (*beta)[i];
+    for(int i = 0; i < alpha.size(); i++) {
+        response[alpha[i]] = beta[i];
     }
     return response;
 }
@@ -474,20 +501,23 @@ bool is_action_legal(Functions *input) {
     if(legal[input->name].size()) {
         int index = 0;
         vector<vector<string>* > appropiate_definition = search_params(input, legal_params);
-        unordered_map<string, string> respa = create_map(appropiate_definition[0], &input->args);
+        unordered_map<string, string> respa = create_map(*appropiate_definition[0], input->args);
         string response = modifier(respa, input->name, legal[input->name][0], 0, legal_params);
         return Functions::get_responses(response, index);
     }
     return true;
 }
 
-bool process_actions(Functions *input) {
-    if(!is_action_legal(input))
+bool process_actions(Functions *&input) {
+    if(!is_action_legal(input)) {
+        Functions::free_mem(input);
         return false;
+    }
     int index = 0;
     vector<vector<string>* > appropiate_definition = search_params(input, action_params);
-    unordered_map<string, string> respa = create_map(appropiate_definition[0], &input->args);
+    unordered_map<string, string> respa = create_map(*appropiate_definition[0], input->args);
     string response = modifier(respa, input->name, actions[input->name][0], 0, action_params);
+    Functions::free_mem(input);
     return Functions::get_responses(response, index);
 }
 
@@ -499,7 +529,7 @@ bool Functions::evaluate(const string &param) {
             initial_function->args[i] = evaluation_function;
     }
     if(!initial_function) {
-        free(initial_function);
+        Functions::free_mem(initial_function);
         return false;
     }
     if(is_special_function(initial_function)) {
@@ -509,7 +539,7 @@ bool Functions::evaluate(const string &param) {
         return process_actions(initial_function);
     }
     if(search_inits(initial_function)) {
-        free(initial_function);
+        Functions::free_mem(initial_function);
         return true;
     }
     bool final_response = false;
@@ -517,18 +547,18 @@ bool Functions::evaluate(const string &param) {
     for(int i = 0; i < appropiate_definition.size(); i++) {
         int index = 0;
         if(!appropiate_definition[i]) {
-            free(initial_function);
+            Functions::free_mem(initial_function);
             return false;
         }
-        unordered_map<string, string> respa = create_map(appropiate_definition[i], &initial_function->args);
+        unordered_map<string, string> respa = create_map(*appropiate_definition[i], initial_function->args);
         string response = modifier(respa, initial_function->name, string_definitions[initial_function->name][i], i, var_params);
         final_response = get_responses(response, index);
         if(final_response) {
-            free(initial_function);
+            Functions::free_mem(initial_function);
             return final_response;
         }
     }
-    free(initial_function);
+    Functions::free_mem(initial_function);
     return final_response;
 }
 
