@@ -10,6 +10,13 @@ unordered_map<string*, bool> first_player_legality, second_player_legality, firs
 vector<string*> first_action_names, second_action_names;
 unordered_map<string, bool> *inits_vars = new unordered_map<string, bool>;
 
+void reserve_arrays() {
+    predicate_definitions.reserve(256);
+    player_names.reserve(16);
+    second_action_names.reserve(128);
+    second_action_names.reserve(128);
+}
+
 vector<string*> *get_first_player_actions() {
     return &first_action_names;
 }
@@ -452,6 +459,7 @@ vector< vector<string>* > search_params(Functions *fct, unordered_map<string, ve
     bool traversed = false;
     string key_map = fct->name;
     vector< vector<string>* > response;
+    response.reserve(32);
     for(int i = 0; i < var_params[key_map].size(); i++) {
         bool checker = true;
         traversed = true;

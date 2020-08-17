@@ -17,10 +17,10 @@ vector<string> input_file = {"role(xplayer)",
                                  "diagonal(Player) :- cell(1, 1, Player) & cell(2, 2, Player) & cell(3, 3, Player)",
                                  "diagonal(Player) :- cell(1, 3, Player) & cell(2, 2, Player) & cell(3, 1, Player)",
                                  "is_full(b) :- ~cell(1, 1, b) & ~cell(1, 2, b) & ~cell(1, 3, b) & ~cell(2, 1, b) & ~cell(2, 2, b) & ~cell(2, 3, b) & ~cell(3, 1, b) & ~cell(3, 2, b) & ~cell(3, 3, b)",
-                                 "draw(a) :- ~diagonal(x) & ~diagonal(o) & ~rowscols(x) & ~rowscols(o) & is_full(b)",
-                                 "goal_first(a) :- rowscols(x) | diagonal(x)",
-                                 "goal_last(a) :- rowscols(o) | diagonal(o)",
-                                 "terminal(a) :- goal_first(a) | goal_last(a) | draw(a)",
+                                 "draw() :- ~diagonal(x) & ~diagonal(o) & ~rowscols(x) & ~rowscols(o) & is_full(b)",
+                                 "goal_first() :- rowscols(x) | diagonal(x)",
+                                 "goal_last() :- rowscols(o) | diagonal(o)",
+                                 "terminal() :- goal_first() | goal_last() | draw()",
                                  "legal(xplayer, markx(A, B)) :- cell(A, B, b)",
                                  "does(xplayer, markx(A, B)) :- next(cell(A, B, b), cell(A, B, x))",
                                  "legal(oplayer, marko(A, B)) :- cell(A, B, b)",
@@ -32,6 +32,11 @@ void test_manager(string test) {
     uint64_t finish;
     cout << "Starting memory is: " << get_memory_of_process() << " megabytes!\n";
     if(test == "tictac") {
+        reserve_arrays();
+        for(int i = 0; i < input_file.size(); i++) {
+            Functions::process_line(input_file[i]);
+        }
+        cout << "Compiled!\n";
         start = timeSinceEpochMillisec();
         test_random_tic_tac();
         finish = timeSinceEpochMillisec();
@@ -55,22 +60,19 @@ void test_function() {
 }
 
 void test_random_tic_tac() {
-    for(int i = 0; i < input_file.size(); i++) {
-        Functions::process_line(input_file[i]);
-    }
-    int index = 0, max_ind = 10000, f = 0, s = 0, d = 0;
+    int index = 0, max_ind = 5000, f = 0, s = 0, d = 0;
     while(index < max_ind) {
         save_state();
-        while(!Functions::evaluate("terminal(a)")) {
+        while(!Functions::evaluate("terminal()")) {
             Functions::evaluate(get_random_action_first_player());
-            if(!Functions::evaluate("terminal(a)"))
+            if(!Functions::evaluate("terminal()"))
                 Functions::evaluate(get_random_action_second_player());
         }
-        if(Functions::evaluate("goal_first(a)"))
+        if(Functions::evaluate("goal_first()"))
             f++;
-        if(Functions::evaluate("goal_last(a)"))
+        if(Functions::evaluate("goal_last()"))
             s++;
-        if(Functions::evaluate("draw(a)"))
+        if(Functions::evaluate("draw()"))
             d++;
         load_state();
         index++;

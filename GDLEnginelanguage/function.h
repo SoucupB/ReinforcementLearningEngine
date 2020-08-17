@@ -55,6 +55,7 @@ unordered_map<string, bool> *get_map();
 void save_state();
 void load_state();
 unordered_map<string, string> create_map(vector<string> &alpha, vector<string> &beta);
+void reserve_arrays();
 
 //trainer.cpp
 void show_all_inits();
