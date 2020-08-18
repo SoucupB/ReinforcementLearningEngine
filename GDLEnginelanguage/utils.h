@@ -26,7 +26,8 @@ enum {
     OR,
     NO,
     WRONG,
-    ROLE
+    ROLE,
+    NAME
 };
 
 
@@ -37,6 +38,7 @@ bool is_function_var(string input);
 bool is_arithmetic_sign(char element);
 void free_pointer(void **pointer);
 void free_array(vector<vector<string>* > &input);
+string spaces(int depth);
 int min(int a, int b);
 __int64 get_memory_of_process();
 uint64_t timeSinceEpochMillisec();

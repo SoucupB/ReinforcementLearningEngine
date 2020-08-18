@@ -15,6 +15,7 @@ public:
     int function_type;
     string player_name;
     int function_index = 0;
+    static void transform_into_hash(Functions *funct, vector<unsigned short> &buffer, int offset);
     static bool func_eval(string element);
     static Functions* get_function(const string &funct);
     static string get_simple_arguments(const string &arge, int &index);
@@ -29,15 +30,21 @@ public:
     static Functions *get_function_object(const string &input, int &index);
     static int argument_types_function(string &argument);
     static void process_line(string input);
+    static void process_line_binary(string input);
     static bool processor(string init);
     static bool search_inits(Functions *current_funct);
     static bool evaluate(const string &param);
     string to_string();
     static bool get_responses(const string &param, int &index);
     static void free_mem(Functions *&func);
+    static bool evaluate_binary(const string &param);
+    static bool get_responses_binary(const string &param, int &index, vector<unsigned short> &buffer, int l);
+    static bool evaluate_binary_expression(vector<unsigned short> def, unordered_map<unsigned short, unsigned short> &mapper);
+    static bool evaluate_binary_vector(vector<unsigned short> param);
 };
 
 //function.cpp
+vector<unsigned short> get_message(unsigned short name, string param);
 int get_string_response(const string &input, int &index);
 string modifier(unordered_map<string, string> &elems, string &function_name, string &to_modify, int index);
 bool is_action(Functions *input);
@@ -56,6 +63,11 @@ void save_state();
 void load_state();
 unordered_map<string, string> create_map(vector<string> &alpha, vector<string> &beta);
 void reserve_arrays();
+int hasher(string elem);
+int get_type(short number);
+void function_describer(vector<unsigned short> &buffer, int offset, int depth);
+string get_hash(int number);
+void generate_zovrist();
 
 //trainer.cpp
 void show_all_inits();

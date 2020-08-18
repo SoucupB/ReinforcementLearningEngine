@@ -47,6 +47,13 @@ bool is_function_var(string input) {
     return input.find('(') != string::npos;
 }
 
+string spaces(int depth) {
+    string st = "";
+    for(int i = 0; i < depth; i++)
+        st += "  ";
+    return st;
+}
+
 int min(int a, int b) {
     return a < b ? a : b;
 }

@@ -9,6 +9,90 @@ vector<string> player_names;
 unordered_map<string*, bool> first_player_legality, second_player_legality, first_player_action, second_player_action;
 vector<string*> first_action_names, second_action_names;
 unordered_map<string, bool> *inits_vars = new unordered_map<string, bool>;
+unordered_map<int, string> hash_mapper;
+
+int hasher(string elem) {
+    int element = std::hash<std::string>()(elem) % 1024;
+    while(hash_mapper[element].size()) {
+        if(hash_mapper[element] == elem)
+            return element;
+        element = (element + 3) % 1024;
+    }
+    hash_mapper[element] = elem;
+    return element;
+}
+
+string get_hash(int number) {
+    if(number < 1024)
+        return hash_mapper[number];
+    if(number < 1024 * 2)
+        return hash_mapper[number - 1024];
+    if(number < 1024 * 3)
+        return hash_mapper[number - 1024 * 2];
+    return hash_mapper[number - 1024 * 3];
+}
+
+void Functions::transform_into_hash(Functions *funct, vector<unsigned short> &buffer, int offset) {
+    int initial_offset = offset;
+    buffer.push_back(hasher(funct->name));
+    buffer.push_back(0);
+    int start_offset = offset + 1;
+    buffer.push_back(funct->args.size());
+    offset += 3;
+    for(int i = 0; i < funct->args.size(); i++) {
+        if(funct->argument_types[i] == PREDICATE) {
+            Functions *child = get_function(funct->args[i]);
+            transform_into_hash(child, buffer, offset);
+            free_mem(child);
+            offset += buffer[offset + 1];
+        } else
+        if(funct->argument_types[i] == VARIABLE) {
+            buffer.push_back(hasher(funct->args[i]) + 1024);
+            offset++;
+        } else
+        if(funct->argument_types[i] == NUMBER) {
+            buffer.push_back(hasher(funct->args[i]) + 1024 * 2);
+            offset++;
+        } else
+        if(funct->argument_types[i] == CONSTANT) {
+            buffer.push_back(hasher(funct->args[i]) + 1024 * 3);
+            offset++;
+        }
+    }
+    buffer[start_offset] = offset - initial_offset;
+}
+
+void function_describer(vector<unsigned short> &buffer, int offset, int depth) {
+    cout << spaces(depth) << "The function has " << buffer[offset + 1] << " parameters!\n";
+    offset += 2;
+    int c_offset = offset;
+    for(int i = 0; i < buffer[c_offset]; i++) {
+        if(get_type(buffer[i + offset + 1]) == VARIABLE) {
+            cout << spaces(depth) << i << "'th param is a VARIABLE\n";
+        } else
+        if(get_type(buffer[i + offset + 1]) == NUMBER) {
+            cout << spaces(depth) << i << "'th param is a NUMBER\n";
+        } else
+        if(get_type(buffer[i + offset + 1]) == PREDICATE) {
+            cout << spaces(depth) << i << "'th param is a PREDICATE\n";
+            function_describer(buffer, i + offset + 1, depth + 1);
+            offset += buffer[i + offset + 2];
+        } else
+        if(get_type(buffer[i + offset + 1]) == CONSTANT) {
+            cout << spaces(depth) << i << "'th param is a CONSTANT\n";
+        }
+    }
+}
+
+int get_type(short number) {
+    if(number < 1024)
+        return PREDICATE;
+    if(number < 1024 * 2)
+        return VARIABLE;
+    if(number < 1024 * 3)
+        return NUMBER;
+    return CONSTANT;
+}
 
 void reserve_arrays() {
     predicate_definitions.reserve(256);
@@ -329,14 +413,6 @@ bool add_special_function(Functions *&input) {
 }
 
 bool is_special_function(Functions *function) {
-    // if(function->name == "init") {
-    //     return true;
-    // }
-    // if(function->name == "role") {
-    //     return true;
-    // }
-    // if(function->name == "next")
-    //     return true;
     if(function->function_type == INIT) {
         return true;
     }
