@@ -67,7 +67,7 @@ int hasher(string elem);
 int get_type(short number);
 void function_describer(vector<unsigned short> &buffer, int offset, int depth);
 string get_hash(int number);
-void generate_zovrist();
+
 
 //trainer.cpp
 void show_all_inits();
@@ -75,3 +75,7 @@ vector<string> get_total_actions();
 string get_random_action_first_player();
 string get_random_action_second_player();
 void get_strings(Functions *current_function, vector<string> &constants, int k, vector<string> &response);
+
+//binary_function.cpp
+void predefined_hashed();
+void generate_zovrist();

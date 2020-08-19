@@ -24,10 +24,12 @@ enum {
     ACTION_PREDICATE,
     AND,
     OR,
-    NO,
+    NOT,
     WRONG,
     ROLE,
-    NAME
+    NAME,
+    OPEN_PARANTH,
+    CLOSE_PARANTH
 };
 
 

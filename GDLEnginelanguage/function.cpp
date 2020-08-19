@@ -29,17 +29,22 @@ string get_hash(int number) {
         return hash_mapper[number - 1024];
     if(number < 1024 * 3)
         return hash_mapper[number - 1024 * 2];
-    return hash_mapper[number - 1024 * 3];
+    if(number < 1024 * 4)
+        return hash_mapper[number - 1024 * 3];
+    return hash_mapper[number - 1024 * 4];
 }
 
 void Functions::transform_into_hash(Functions *funct, vector<unsigned short> &buffer, int offset) {
+    offset = buffer.size();
     int initial_offset = offset;
     buffer.push_back(hasher(funct->name));
     buffer.push_back(0);
     int start_offset = offset + 1;
     buffer.push_back(funct->args.size());
     offset += 3;
+   // cout << funct->name << "\n";
     for(int i = 0; i < funct->args.size(); i++) {
+      //  cout << funct->args[i] << "\n";
         if(funct->argument_types[i] == PREDICATE) {
             Functions *child = get_function(funct->args[i]);
             transform_into_hash(child, buffer, offset);
@@ -60,6 +65,9 @@ void Functions::transform_into_hash(Functions *funct, vector<unsigned short> &bu
         }
     }
     buffer[start_offset] = offset - initial_offset;
+    // for(int i = 0; i < buffer.size(); i++)
+    //     cout << buffer[i] << " ";
+    // cout << "\n";
 }
 
 void function_describer(vector<unsigned short> &buffer, int offset, int depth) {

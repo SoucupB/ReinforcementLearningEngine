@@ -2,9 +2,16 @@
 
 vector<long long> zovrist_keys_vector;
 unordered_map<unsigned long long, bool> inits;
-unordered_map<unsigned short, vector< vector<unsigned short> > > definitions;
+unordered_map<unsigned short, vector< vector<unsigned short> > > definitions, does_param;
 unordered_map<unsigned short, vector< vector<unsigned short> > > params;
+vector<unsigned short> names;
+unordered_map<unsigned short, unsigned short> special_functions;
 int max_hash_size = 128;
+
+void predefined_hashed() {
+    special_functions[hasher("init")] = INIT;
+    special_functions[hasher("next")] = NEXT;
+}
 
 unsigned long long get_hash_predicate(vector<unsigned short> &hash_vector, int l, int r) {
     int k = 0;
@@ -25,35 +32,24 @@ bool add_special_binary_function(Functions *&input) {
         inits[get_hash_predicate(hash_vector, 0, hash_vector.size() - 1)] = 1;
         return true;
     }
-    // if(input->name == "role" && input->args.size() == 1)
-    // {
-    //     if(player_names.size() >= 2)
-    //     {
-    //         error("Too many roles, only 2 are supported!");
-    //     }
-    //     player_names.push_back(input->args[0]);
-    //     Functions::free_mem(input);
-    //     return true;
-    // }
-    // if(input->name == "next") {
-    //     if(player_names.size() != 2)
-    //     {
-    //         error("Wrong number of parameters for next!");
-    //     }
-    //     Functions *first = Functions::get_function(input->args[0]), *second = Functions::get_function(input->args[1]);
-    //     if(!Functions::search_inits(first)) {
-    //         Functions::free_mem(second);
-    //         Functions::free_mem(first);
-    //         Functions::free_mem(input);
-    //         return false;
-    //     }
-    //     transform(first, second);
-    //     Functions::free_mem(second);
-    //     Functions::free_mem(first);
-    //     Functions::free_mem(input);
-    //     return true;
-    // }
-    // Functions::free_mem(input);
+    if(input->name == "role")
+    {
+        if(input->args.size() != 1)
+        {
+            error("Role has only 1 param!");
+        }
+        if(names.size() >= 2)
+        {
+            error("Too many roles, only 2 are supported!");
+        }
+        names.push_back(hasher(input->args[0]));
+        return true;
+    }
+    if(input->name == "next") {
+        Functions *first = Functions::get_function(input->args[0]), *second = Functions::get_function(input->args[1]);
+        return true;
+    }
+    Functions::free_mem(input);
     return false;
 }
 
@@ -72,6 +68,18 @@ void generate_zovrist() {
     }
 }
 
+void add_legality_or_actions_binary(Functions *&funct) {
+    if(funct->name == "legal" && funct->args.size() != 2) {
+        error("Wrong number of arguments for legality");
+    }
+    if(funct->name == "does") {
+        if(funct->args.size() != 2) {
+            error("Wrong number of arguments for actions");
+        }
+
+    }
+}
+
 
 void Functions::process_line_binary(string input) {
     int index = 0, c_index = index;
@@ -79,6 +87,7 @@ void Functions::process_line_binary(string input) {
         error("Syntax error");
     }
     Functions *first_operator = get_function(input.substr(c_index, index - c_index + 1)), *c_first_operator = NULL;
+    add_legality_or_actions_binary(first_operator);
     vector<unsigned short> init_function, responser;
     Functions::transform_into_hash(first_operator, init_function, 0);
     index++;
@@ -86,7 +95,6 @@ void Functions::process_line_binary(string input) {
         add_special_binary_function(first_operator);
         return ;
     }
-    add_legality_or_actions(first_operator);
     remove_spaces(input, index);
     if(index + 1 < input.size() && input[index] == ':' && input[index + 1] == '-') {
         index += 2;
@@ -102,6 +110,7 @@ void Functions::process_line_binary(string input) {
     int cutted_index = input.size() - index;
     string definition_string = input.substr(index, cutted_index);
     first_operator->function_type = PREDICATE;
+    Functions::free_mem(first_operator);
     definition_string.erase(remove(definition_string.begin(), definition_string.end(), ' '), definition_string.end());
     for(int i = 0; i < init_function[1]; i++) {
         responser.push_back(init_function[i]);
@@ -130,7 +139,7 @@ void Functions::process_line_binary(string input) {
 }
 
 bool search_inits_binary(vector<unsigned short> &hash_vector, int l, int r) {
-    unsigned long long hasher = get_hash_predicate(hash_vector, 0, hash_vector.size() - 1);
+    unsigned long long hasher = get_hash_predicate(hash_vector, l, r);
     return inits.find(hasher) != inits.end();
 }
 
@@ -138,13 +147,13 @@ unsigned short get_sign(unsigned short sign) {
     return sign + 1024 * 4;
 }
 
-vector< vector<unsigned short> > get_clossest_function(vector<unsigned short> &param) {
-    int offset = param[2];
-    vector< vector<unsigned short> > input = params[param[0]], response;
+vector< vector<unsigned short> > get_clossest_function(vector<unsigned short> &param, int start_offset) {
+    int offset = param[2 + start_offset];
+    vector< vector<unsigned short> > input = params[param[start_offset]], response;
     for(int i = 0; i < input.size(); i++) {
         bool check = 1;
         for(int j = 3; j < input[i][2]; j++) {
-            if(get_type(input[i][j]) != VARIABLE && input[i][j] != param[j]) {
+            if(get_type(input[i][j]) != VARIABLE && input[i][j] != param[j + start_offset]) {
                 check = 0;
             }
         }
@@ -154,11 +163,11 @@ vector< vector<unsigned short> > get_clossest_function(vector<unsigned short> &p
     return response;
 }
 
-unordered_map<unsigned short, unsigned short> get_equalizer(vector<unsigned short> &param, vector<unsigned short> &to_solve) {
+unordered_map<unsigned short, unsigned short> get_equalizer(vector<unsigned short> &param, vector<unsigned short> &to_solve, int starter) {
     unordered_map<unsigned short, unsigned short> response;
     response.reserve(64);
-    for(int i = 0; i < param.size(); i++) {
-        response[to_solve[i]] = param[i];
+    for(int i = starter; i < param.size(); i++) {
+        response[to_solve[i - starter]] = param[i];
     }
     return response;
 }
@@ -166,6 +175,10 @@ unordered_map<unsigned short, unsigned short> get_equalizer(vector<unsigned shor
 vector<unsigned short> get_expression(vector<unsigned short> &def, int &index, unordered_map<unsigned short, unsigned short> &mapper) {
     vector<unsigned short> response;
     response.reserve(128);
+    if(def[index] == get_sign(NOT)) {
+        response.push_back(def[index]);
+        index++;
+    }
     int total_size = def[index + 1];
     for(int i = 0; i < total_size; i++) {
         if(mapper[def[i + index]])
@@ -183,30 +196,110 @@ bool Functions::evaluate_binary_expression(vector<unsigned short> def, unordered
     while(index < def.size() && (def[index] == get_sign(AND) || def[index] == get_sign(OR))) {
         if(def[index] == get_sign(AND)) {
             index++;
-            element &= evaluate_binary_vector(get_expression(def, index, mapper));
+            if(element)
+                element &= evaluate_binary_vector(get_expression(def, index, mapper));
+            else {
+                if(def[index] == get_sign(NOT))
+                    index += def[index + 2];
+                else
+                    index += def[index + 1];
+            }
         }
         else
         if(def[index] == get_sign(OR)) {
             index++;
-            element |= evaluate_binary_vector(get_expression(def, index, mapper));
+            if(!element)
+                element |= evaluate_binary_vector(get_expression(def, index, mapper));
+            else {
+                if(def[index] == get_sign(NOT))
+                    index += def[index + 2];
+                else
+                    index += def[index + 1];
+            }
         }
     }
     return element;
 }
 
-bool Functions::evaluate_binary_vector(vector<unsigned short> param) {
-    bool response_query = false;
-    if(search_inits_binary(param, 0, param.size() - 1)) {
+bool is_special_func_runner(vector<unsigned short> &param) {
+    int index = 0;
+    if(param[index] == get_sign(NOT))
+        index++;
+    if(special_functions[param[index]] == INIT)
+        return true;
+    if(special_functions[param[index]] == NEXT)
+        return true;
+    return false;
+}
+
+bool process_special_function_run(vector<unsigned short> &param) {
+    int index = 0;
+    if(param[index] == get_sign(NOT))
+        index++;
+    if(special_functions[param[index]] == INIT) {
+        int starting_index = 3;
+        if(get_type(param[starting_index]) != PREDICATE) error("Init function allows only predicate arguments!");
+        if(param[starting_index - 1] != 1) error("Init function has only one argument!");
+        unsigned long long current_hash = get_hash_predicate(param, starting_index, starting_index + param[starting_index + 1] - 1);
+        if(inits.find(current_hash) != inits.end())
+            return false;
+        inits[current_hash] = 1;
         return true;
     }
-    vector< vector<unsigned short> > response = get_clossest_function(param);
+    if(special_functions[param[index]] == NEXT) {
+        int starting_index = 3;
+        if(get_type(param[starting_index]) != PREDICATE || get_type(param[starting_index + param[starting_index + 1]]) != PREDICATE) error("Next function allows only exclusively 2 predicates!");
+        if(param[starting_index - 1] != 2) error("Next function has exclusively 2 arguments!");
+        unsigned long long first_hash = get_hash_predicate(param, starting_index, starting_index + param[starting_index + 1] - 1);
+        int ending_index = starting_index + param[starting_index + 1];
+        unsigned long long second_hash = get_hash_predicate(param, ending_index, ending_index + param[ending_index + 1] - 1);
+        if(inits.find(first_hash) == inits.end())
+            return false;
+        inits.erase(first_hash);
+        if(inits.find(second_hash) != inits.end())
+            return false;
+        inits[second_hash] = 1;
+        return true;
+    }
+    return false;
+}
+
+bool Functions::evaluate_binary_vector(vector<unsigned short> param) {
+    bool response_query = false, negation = false;
+    int starter = 0;
+    if(param[0] == get_sign(NOT))
+    {
+        starter++;negation = !negation;
+    }
+    if(is_special_func_runner(param)) {
+        return negation ^ process_special_function_run(param);
+    }
+    // for(int i = 0; i < param.size(); i++) {
+    //     if(param[i] == get_sign(NOT))
+    //         cout << "~" << " ";
+    //     else if(param[i] == get_sign(OR))
+    //         cout << "|" << " ";
+    //     else if(param[i] == get_sign(AND))
+    //         cout << "&" << " ";
+    //     else if(param[i] == get_sign(OPEN_PARANTH))
+    //         cout << "(" << " ";
+    //     else if(param[i] == get_sign(CLOSE_PARANTH))
+    //         cout << ")" << " ";
+    //     else
+    //         cout << get_hash(param[i]) << " ";
+    // }
+    // cout << "\n";
+    if(search_inits_binary(param, starter, param.size() - 1)) {
+        return true ^ negation;
+    }
+    vector< vector<unsigned short> > response = get_clossest_function(param, starter);
     for(int i = 0; i < response.size(); i++) {
-        unordered_map<unsigned short, unsigned short> mapper = get_equalizer(param, response[i]);
+        unordered_map<unsigned short, unsigned short> mapper = get_equalizer(param, response[i], starter);
         response_query = evaluate_binary_expression(definitions[response[i][0]][i], mapper);
         if(response_query)
-            return response_query;
+            return response_query ^ negation;
     }
-    return response_query;
+    return response_query ^ negation;
 }
 
 
@@ -219,43 +312,6 @@ bool Functions::evaluate_binary(const string &param) {
     }
     Functions::free_mem(initial_function);
     return evaluate_binary_vector(hash_vector);
-    // for(int i = 0; i < initial_function->args.size(); i++) {
-    //     string evaluation_function = evaluate_expression(initial_function->args[i]);
-    //     if(evaluation_function.size())
-    //         initial_function->args[i] = evaluation_function;
-    // }
-    // if(!initial_function) {
-    //     Functions::free_mem(initial_function);
-    //     return false;
-    // }
-    // if(is_special_function(initial_function)) {
-    //     return add_special_function(initial_function);
-    // }
-    // if(is_action(initial_function)) {
-    //     return process_actions(initial_function);
-    // }
-    // if(search_inits(initial_function)) {
-    //     Functions::free_mem(initial_function);
-    //     return true;
-    // }
-    // bool final_response = false;
-    // vector<vector<string>* > appropiate_definition = search_params(initial_function, var_params);
-    // for(int i = 0; i < appropiate_definition.size(); i++) {
-    //     int index = 0;
-    //     if(!appropiate_definition[i]) {
-    //         Functions::free_mem(initial_function);
-    //         return false;
-    //     }
-    //     unordered_map<string, string> respa = create_map(*appropiate_definition[i], initial_function->args);
-    //     string response = modifier(respa, initial_function->name, string_definitions[initial_function->name][i], i, var_params);
-    //     final_response = get_responses(response, index);
-    //     if(final_response) {
-    //         Functions::free_mem(initial_function);
-    //         return final_response;
-    //     }
-    // }
-    // Functions::free_mem(initial_function);
-    // return final_response;
 }
 
 bool Functions::get_responses_binary(const string &param, int &index, vector<unsigned short> &buffer, int l) {
@@ -263,18 +319,26 @@ bool Functions::get_responses_binary(const string &param, int &index, vector<uns
     int c_index = index;
     bool first_param;
     if(param[index] == '(') {
+        buffer.push_back(get_sign(OPEN_PARANTH));
+        l++;
         int relative_index = 0;
         get_string_response(param, index);
         if(c_index == -1) {
             error("Incorrect function syntax!");
         }
         get_responses_binary(param.substr(c_index + 1, index - c_index - 1), relative_index, buffer, l);
+        buffer.push_back(get_sign(CLOSE_PARANTH));
+        l++;
     }
     else {
         if(!is_function_recursion(param, index, 0)) {
-            error("Incorrect function syntax! aa");
+            error("Incorrect function syntax!");
         }
         Functions *current_param = get_function(param.substr(c_index, index - c_index + 1));
+        if(negative_expression) {
+            buffer.push_back(get_sign(NOT));
+            l++;
+        }
         Functions::transform_into_hash(current_param, buffer, l);
         Functions::free_mem(current_param);
         l += buffer[l + 1];
@@ -287,12 +351,18 @@ bool Functions::get_responses_binary(const string &param, int &index, vector<uns
             negative_expression = get_negation(param, index);
             c_index = index;
             if(param[index] == '(') {
+                buffer.push_back(get_sign(AND));
+                l++;
+                buffer.push_back(get_sign(OPEN_PARANTH));
+                l++;
                 int relative_index = 0;
                 get_string_response(param, index);
                 if(c_index == -1) {
                     error("Incorrect function syntax!");
                 }
                 get_responses_binary(param.substr(c_index + 1, index - c_index - 1), relative_index, buffer, l);
+                buffer.push_back(get_sign(CLOSE_PARANTH));
+                l++;
             }
             else {
                 if(!is_function_recursion(param, index, 0)) {
@@ -300,6 +370,10 @@ bool Functions::get_responses_binary(const string &param, int &index, vector<uns
                 }
                 buffer.push_back(get_sign(AND));
                 l++;
+                if(negative_expression) {
+                    buffer.push_back(get_sign(NOT));
+                    l++;
+                }
                 Functions *current_param = get_function(param.substr(c_index, index - c_index + 1));
                 Functions::transform_into_hash(current_param, buffer, l);
                 Functions::free_mem(current_param);
@@ -311,12 +385,18 @@ bool Functions::get_responses_binary(const string &param, int &index, vector<uns
             negative_expression = get_negation(param, index);
             c_index = index;
             if(param[index] == '(') {
+                buffer.push_back(get_sign(OR));
+                l++;
+                buffer.push_back(get_sign(OPEN_PARANTH));
+                l++;
                 int relative_index = 0;
                 get_string_response(param, index);
                 if(c_index == -1) {
                     error("Incorrect function syntax!");
                 }
                 get_responses_binary(param.substr(c_index + 1, index - c_index - 1), relative_index, buffer, l);
+                buffer.push_back(get_sign(CLOSE_PARANTH));
+                l++;
             }
             else {
                 if(!is_function_recursion(param, index, 0)) {
@@ -324,6 +404,10 @@ bool Functions::get_responses_binary(const string &param, int &index, vector<uns
                 }
                 buffer.push_back(get_sign(OR));
                 l++;
+                if(negative_expression) {
+                    buffer.push_back(get_sign(NOT));
+                    l++;
+                }
                 Functions *current_param = get_function(param.substr(c_index, index - c_index + 1));
                 Functions::transform_into_hash(current_param, buffer, l);
                 Functions::free_mem(current_param);
@@ -340,6 +424,26 @@ vector<unsigned short> get_message(unsigned short name, string param) {
     vector<unsigned short> response;
     response.reserve(256);
     Functions::get_responses_binary(param, index, response, left);
+    // for(int i = 0; i < response.size(); i++) {
+    //     cout << response[i] << " ";
+    // }
+    // cout << "\n";
+    // for(int i = 0; i < response.size(); i++) {
+    //     if(response[i] == get_sign(NOT))
+    //         cout << "~" << " ";
+    //     else if(response[i] == get_sign(OR))
+    //         cout << "|" << " ";
+    //     else if(response[i] == get_sign(AND))
+    //         cout << "&" << " ";
+    //     else if(response[i] == get_sign(OPEN_PARANTH))
+    //         cout << "(" << " ";
+    //     else if(response[i] == get_sign(CLOSE_PARANTH))
+    //         cout << ")" << " ";
+    //     else
+    //         cout << get_hash(response[i]) << " ";
+    // }
+    // cout << "\n";
+   // exit(0);
     definitions[name].push_back(response);
     return response;
 }

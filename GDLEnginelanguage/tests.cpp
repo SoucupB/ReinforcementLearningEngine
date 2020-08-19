@@ -61,6 +61,11 @@ void test_manager(string test) {
         test_speed_comparison(0);
         finish = timeSinceEpochMillisec();
     }
+    if(test == "test_special") {
+        start = timeSinceEpochMillisec();
+        test_special_functions_function();
+        finish = timeSinceEpochMillisec();
+    }
     cout << "\nEnding memory is: " << get_memory_of_process() << " megabytes!\n";
     cout << "\nTotal time for " + test + " is: " << finish - start << " miliseconds!";
 }
@@ -127,9 +132,9 @@ void test_process_function() {
 }
 
 void test_speed_comparison(int index) {
-    vector<string> current_file = { "init(cell(1, 1, b))",
-                                    "init(cell(1, 2, b))",
-                                    "init(cell(1, 3, b))",
+    vector<string> current_file = { "init(cell(1, 1, x))",
+                                    "init(cell(1, 2, x))",
+                                    "init(cell(1, 3, x))",
                                     "init(cell(2, 1, b))",
                                     "init(cell(2, 2, b))",
                                     "init(cell(2, 3, b))",
@@ -138,19 +143,23 @@ void test_speed_comparison(int index) {
                                     "init(cell(3, 3, b))",
                                     "row(Player, X) :- cell(X, 1, Player) & cell(X, 2, Player) & cell(X, 3, Player)",
                                     "row(Player, A) :- cell(1, A, Player) & cell(2, A, Player) & cell(3, A, Player)",
+                                    "is_full() :- ~cell(1, 1, b) & ~cell(1, 2, b) & ~cell(1, 3, b) & ~cell(2, 1, b) & ~cell(2, 2, b) & ~cell(2, 3, b) & ~cell(3, 1, b) & ~cell(3, 2, b) & ~cell(3, 3, b)",
                                     "diagonal(Player) :- cell(1, 1, Player) & cell(2, 2, Player) & cell(3, 3, Player)",
                                     "diagonal(Player) :- cell(1, 3, Player) & cell(2, 2, Player) & cell(3, 1, Player)",
-                                    "goal(Player) :- row(Player, 1) | row(Player, 2) | row(Player, 3) | diagonal(Player)"
+                                    "draw() :- ~goal(o) & ~goal(x) & is_full()",
+                                    "goal(Player) :- row(Player, 1) | row(Player, 2) | row(Player, 3) | diagonal(Player)",
+                                    "terminal() :- goal(x) | goal(o) | draw()"
                                     };
-    int max_tests_size = 100000;
+    int max_tests_size = 10000;
     if(index == 0) {
+        predefined_hashed();
         generate_zovrist();
         for(int i = 0; i < current_file.size(); i++) {
             Functions::process_line_binary(current_file[i]);
         }
         int max_tests = max_tests_size;
         for(int i = 0; i < max_tests; i++)
-            Functions::evaluate_binary("goal(x)");
+            Functions::evaluate_binary("terminal()");
     }
     else {
         reserve_arrays();
@@ -159,14 +168,16 @@ void test_speed_comparison(int index) {
         }
         int max_tests = max_tests_size;
         for(int i = 0; i < max_tests; i++)
-            Functions::evaluate("goal(x)");
+            Functions::evaluate("terminal()");
     }
 }
 
 void test_binary_function() {
-    vector<string> current_file = { "init(cell(1, 1, b))",
+    vector<string> current_file = { "role(xplayer)",
+                                    "role(oplayer)",
+                                    "init(cell(1, 1, x))",
                                     "init(cell(1, 2, b))",
-                                    "init(cell(1, 3, b))",
+                                    "init(cell(1, 3, x))",
                                     "init(cell(2, 1, b))",
                                     "init(cell(2, 2, b))",
                                     "init(cell(2, 3, b))",
@@ -175,13 +186,58 @@ void test_binary_function() {
                                     "init(cell(3, 3, b))",
                                     "row(Player, X) :- cell(X, 1, Player) & cell(X, 2, Player) & cell(X, 3, Player)",
                                     "row(Player, A) :- cell(1, A, Player) & cell(2, A, Player) & cell(3, A, Player)",
+                                    "is_full() :- ~cell(1, 1, b) & ~cell(1, 2, b) & ~cell(1, 3, b) & ~cell(2, 1, b) & ~cell(2, 2, b) & ~cell(2, 3, b) & ~cell(3, 1, b) & ~cell(3, 2, b) & ~cell(3, 3, b)",
                                     "diagonal(Player) :- cell(1, 1, Player) & cell(2, 2, Player) & cell(3, 3, Player)",
                                     "diagonal(Player) :- cell(1, 3, Player) & cell(2, 2, Player) & cell(3, 1, Player)",
-                                    "goal(Player) :- row(Player, 1) | row(Player, 2) | row(Player, 3) | diagonal(Player)"
+                                    "draw() :- ~goal(o) & ~goal(x) & is_full()",
+                                    "goal(Player) :- row(Player, 1) | row(Player, 2) | row(Player, 3) | diagonal(Player)",
+                                    "terminal() :- goal(x) | goal(o) | draw()"
                                     };
     generate_zovrist();
+    predefined_hashed();
     for(int i = 0; i < current_file.size(); i++) {
         Functions::process_line_binary(current_file[i]);
     }
-    cout << Functions::evaluate_binary("goal(x)") << " ";
+    cout << Functions::evaluate_binary("terminal()") << " ";
+}
+
+void test_special_functions_function() {
+    vector<string> current_file = { "role(xplayer)",
+                                    "role(oplayer)",
+                                    "init(cell(1, 1, b))",
+                                    "init(cell(1, 2, b))",
+                                    "init(cell(1, 3, x))",
+                                    "init(cell(2, 1, b))",
+                                    "init(cell(2, 2, b))",
+                                    "init(cell(2, 3, b))",
+                                    "init(cell(3, 1, b))",
+                                    "init(cell(3, 2, b))",
+                                    "init(cell(3, 3, b))",
+                                    "row(Player, X) :- cell(X, 1, Player) & cell(X, 2, Player) & cell(X, 3, Player)",
+                                    "row(Player, A) :- cell(1, A, Player) & cell(2, A, Player) & cell(3, A, Player)",
+                                    "is_full() :- ~cell(1, 1, b) & ~cell(1, 2, b) & ~cell(1, 3, b) & ~cell(2, 1, b) & ~cell(2, 2, b) & ~cell(2, 3, b) & ~cell(3, 1, b) & ~cell(3, 2, b) & ~cell(3, 3, b)",
+                                    "diagonal(Player) :- cell(1, 1, Player) & cell(2, 2, Player) & cell(3, 3, Player)",
+                                    "diagonal(Player) :- cell(1, 3, Player) & cell(2, 2, Player) & cell(3, 1, Player)",
+                                    "draw() :- ~goal(o) & ~goal(x) & is_full()",
+                                    "goal(Player) :- row(Player, 1) | row(Player, 2) | row(Player, 3) | diagonal(Player)",
+                                    "terminal() :- goal(x) | goal(o) | draw()",
+                                    "mark(A, B) :- init(cell(A, B, x))",
+                                    "mark_two(A, B) :- next(cell(A, B, b), cell(A, B, x))",
+                                    "does(xplayer, mark(A, B)) :- next(cell(A, B, b), cell(A, B, x))",
+                                    "legal(xplayer, mark(A, B)) :- cell(A, B, b)"
+                                    };
+    generate_zovrist();
+    predefined_hashed();
+    for(int i = 0; i < current_file.size(); i++) {
+        Functions::process_line_binary(current_file[i]);
+    }
+    cout << Functions::evaluate_binary("cell(3, 6, x)") << "\n";
+    cout << Functions::evaluate_binary("mark(3, 6)") << "\n";
+    cout << Functions::evaluate_binary("cell(3, 6, x)") << "\n";
+    cout << Functions::evaluate_binary("mark(3, 6)") << "\n";
+    cout << Functions::evaluate_binary("cell(1, 1, b)") << "\n";
+    cout << Functions::evaluate_binary("cell(1, 1, x)") << "\n";
+    cout << Functions::evaluate_binary("mark_two(5, 6)") << "\n";
+    cout << Functions::evaluate_binary("cell(1, 1, b)") << "\n";
+    cout << Functions::evaluate_binary("cell(1, 1, x)") << "\n";
 }
