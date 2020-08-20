@@ -41,6 +41,10 @@ public:
     static bool get_responses_binary(const string &param, int &index, vector<unsigned short> &buffer, int l);
     static bool evaluate_binary_expression(vector<unsigned short> def, unordered_map<unsigned short, unsigned short> &mapper);
     static bool evaluate_binary_vector(vector<unsigned short> param);
+    static bool evaluate_binary(vector<unsigned short> param);
+    static bool evaluate_binary_action(const string &param, char sign);
+    static bool evaluate_legality(const string &param);
+    static bool evaluate_action(const string &param);
 };
 
 //function.cpp
@@ -69,13 +73,24 @@ void function_describer(vector<unsigned short> &buffer, int offset, int depth);
 string get_hash(int number);
 
 
+
 //trainer.cpp
 void show_all_inits();
 vector<string> get_total_actions();
 string get_random_action_first_player();
 string get_random_action_second_player();
 void get_strings(Functions *current_function, vector<string> &constants, int k, vector<string> &response);
+void get_binary_strings(int k, vector<unsigned short> &constants, vector<unsigned short> to_modify, vector< vector<unsigned short> > &total_actions);
+void play();
+void simulate_player(vector<string> current_file, int total_matches);
 
 //binary_function.cpp
 void predefined_hashed();
 void generate_zovrist();
+vector<unsigned short> get_total_params();
+void show_set();
+vector<unsigned short> get_names();
+vector< vector<unsigned short> > get_legals(unsigned short name);
+unordered_map<unsigned short, unsigned short> get_legal_maps();
+void save_states();
+void load_states();

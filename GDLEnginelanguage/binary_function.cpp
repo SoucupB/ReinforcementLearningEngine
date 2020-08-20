@@ -1,12 +1,37 @@
 #include "function.h"
 
 vector<long long> zovrist_keys_vector;
-unordered_map<unsigned long long, bool> inits;
-unordered_map<unsigned short, vector< vector<unsigned short> > > definitions, does_param;
+unordered_map<unsigned long long, bool> inits, c_inits;
+unordered_map<unsigned short, vector< vector<unsigned short> > > definitions, does_param, legal_param;
 unordered_map<unsigned short, vector< vector<unsigned short> > > params;
 vector<unsigned short> names;
-unordered_map<unsigned short, unsigned short> special_functions;
+unordered_map<unsigned short, unsigned short> special_functions, consts_and_numbers, legal_and_actions;
 int max_hash_size = 128;
+
+vector<unsigned short> get_total_params() {
+    vector<unsigned short> total_params;
+    total_params.reserve(128);
+    for(auto &l : consts_and_numbers) {
+        total_params.push_back(l.first);
+    }
+    return total_params;
+}
+
+void save_states() {
+    c_inits = inits;
+}
+
+void load_states() {
+    inits = c_inits;
+}
+
+vector<unsigned short> get_names() {
+    return names;
+}
+
+vector< vector<unsigned short> > get_legals(unsigned short name) {
+    return legal_param[name];
+}
 
 void predefined_hashed() {
     special_functions[hasher("init")] = INIT;
@@ -22,6 +47,14 @@ unsigned long long get_hash_predicate(vector<unsigned short> &hash_vector, int l
     return hasher;
 }
 
+void show_set() {
+    cout << "\n";
+    for(auto &l : consts_and_numbers) {
+        cout << get_hash(l.first) << "\n";
+    }
+    cout << "\n";
+}
+
 bool add_special_binary_function(Functions *&input) {
     if(input->name == "init" && input->args.size() == 1)
     {
@@ -30,6 +63,8 @@ bool add_special_binary_function(Functions *&input) {
         Functions::transform_into_hash(response, hash_vector, 0);
         Functions::free_mem(response);
         inits[get_hash_predicate(hash_vector, 0, hash_vector.size() - 1)] = 1;
+        for(int i = 3; i < hash_vector.size(); i++)
+            consts_and_numbers[hash_vector[i]] = 1;
         return true;
     }
     if(input->name == "role")
@@ -43,10 +78,6 @@ bool add_special_binary_function(Functions *&input) {
             error("Too many roles, only 2 are supported!");
         }
         names.push_back(hasher(input->args[0]));
-        return true;
-    }
-    if(input->name == "next") {
-        Functions *first = Functions::get_function(input->args[0]), *second = Functions::get_function(input->args[1]);
         return true;
     }
     Functions::free_mem(input);
@@ -74,10 +105,36 @@ void add_legality_or_actions_binary(Functions *&funct) {
     }
     if(funct->name == "does") {
         if(funct->args.size() != 2) {
-            error("Wrong number of arguments for actions");
+            error("Wrong number of arguments for actions!");
         }
-
+        vector<unsigned short> responser;
+        responser.reserve(128);
+        Functions *argv = Functions::get_function(funct->args[1]);
+        argv->name = "+" + argv->name;
+        Functions::transform_into_hash(argv, responser, 0);
+        does_param[hasher(funct->args[0])].push_back(responser);
+        Functions::free_mem(funct);
+        funct = argv;
     }
+    if(funct->name == "legal") {
+        if(funct->args.size() != 2) {
+            error("Wrong number of arguments for legality!");
+        }
+        vector<unsigned short> responser;
+        responser.reserve(128);
+        Functions *argv = Functions::get_function(funct->args[1]);
+        string response = "+" + argv->name;
+        argv->name = "-" + argv->name;
+        legal_and_actions[hasher(argv->name)] = hasher(response);
+        Functions::transform_into_hash(argv, responser, 0);
+        legal_param[hasher(funct->args[0])].push_back(responser);
+        Functions::free_mem(funct);
+        funct = argv;
+    }
+}
+
+unordered_map<unsigned short, unsigned short> get_legal_maps() {
+    return legal_and_actions;
 }
 
 
@@ -274,6 +331,9 @@ bool Functions::evaluate_binary_vector(vector<unsigned short> param) {
     if(is_special_func_runner(param)) {
         return negation ^ process_special_function_run(param);
     }
+  //  for(int i = 0; i < param.size(); i++)
+  //      cout << param[i] << " ";
+  //  exit(0);
     // for(int i = 0; i < param.size(); i++) {
     //     if(param[i] == get_sign(NOT))
     //         cout << "~" << " ";
@@ -302,6 +362,10 @@ bool Functions::evaluate_binary_vector(vector<unsigned short> param) {
     return response_query ^ negation;
 }
 
+bool Functions::evaluate_binary(vector<unsigned short> param) {
+    return evaluate_binary_vector(param);
+}
+
 
 bool Functions::evaluate_binary(const string &param) {
     Functions *initial_function = Functions::get_function(param);
@@ -310,6 +374,26 @@ bool Functions::evaluate_binary(const string &param) {
     if(!initial_function) {
         return false;
     }
+    Functions::free_mem(initial_function);
+    return evaluate_binary_vector(hash_vector);
+}
+
+bool Functions::evaluate_legality(const string &param) {
+    return evaluate_binary_action(param, '-');
+}
+
+bool Functions::evaluate_action(const string &param) {
+    return evaluate_binary_action(param, '+');
+}
+
+bool Functions::evaluate_binary_action(const string &param, char sign) {
+    Functions *initial_function = Functions::get_function(param);
+    if(!initial_function) {
+        return false;
+    }
+    initial_function->name = sign + initial_function->name;
+    vector<unsigned short> hash_vector;
+    Functions::transform_into_hash(initial_function, hash_vector, 0);
     Functions::free_mem(initial_function);
     return evaluate_binary_vector(hash_vector);
 }

@@ -17,3 +17,4 @@ void test_function_transformation();
 void test_binary_function();
 void test_speed_comparison(int);
 void test_special_functions_function();
+void test_tic_tac_toe();
