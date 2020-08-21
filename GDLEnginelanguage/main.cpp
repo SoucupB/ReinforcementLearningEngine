@@ -15,6 +15,6 @@ int main() {
    // test_manager("binary_function");
    // test_manager("test_special");
     test_manager("test_tic_tac");
-    //test_manager("test_speed_old");
+  //  test_manager("test_speed_old");
    // test_manager("test_speed_new");
 }

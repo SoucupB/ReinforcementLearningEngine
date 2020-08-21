@@ -42,9 +42,7 @@ void Functions::transform_into_hash(Functions *funct, vector<unsigned short> &bu
     int start_offset = offset + 1;
     buffer.push_back(funct->args.size());
     offset += 3;
-   // cout << funct->name << "\n";
     for(int i = 0; i < funct->args.size(); i++) {
-      //  cout << funct->args[i] << "\n";
         if(funct->argument_types[i] == PREDICATE) {
             Functions *child = get_function(funct->args[i]);
             transform_into_hash(child, buffer, offset);

@@ -153,7 +153,7 @@ void test_speed_comparison(int index) {
                                     "diagonal(Player) :- cell(1, 3, Player) & cell(2, 2, Player) & cell(3, 1, Player)",
                                     "draw() :- ~goal(o) & ~goal(x) & is_full()",
                                     "goal(Player) :- row(Player, 1) | row(Player, 2) | row(Player, 3) | diagonal(Player)",
-                                    "terminal() :- goal(x) | goal(o) | draw()"
+                                    "terminal() :- goal(x) | goal(o) | is_full()"
                                     };
     int max_tests_size = 100000;
     if(index == 0) {
@@ -249,6 +249,27 @@ void test_special_functions_function() {
     cout << Functions::evaluate_binary("cell(1, 1, x)") << "\n";
 }
 
+void show_games() {
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+            int x = Functions::evaluate_binary("mark(" + to_string(i + 1) + ", " + to_string(j + 1) + ")");
+            int o = Functions::evaluate_binary("circle(" + to_string(i + 1) + ", " + to_string(j + 1) + ")");
+            int b = Functions::evaluate_binary("free(" + to_string(i + 1) + ", " + to_string(j + 1) + ")");
+            int z = Functions::evaluate_binary("wall(" + to_string(i + 1) + ", " + to_string(j + 1) + ")");
+            if(x)
+                cout << 1 << " ";
+            if(o)
+                cout << 2 << " ";
+            if(b)
+                cout << 0 << " ";
+            if(z)
+                cout << 3 << " ";
+        }
+        cout << "\n";
+    }
+    cout << "\n";
+}
+
 void test_tic_tac_toe() {
     vector<string> current_file = { "role(xplayer)",
                                     "role(oplayer)",
@@ -268,7 +289,7 @@ void test_tic_tac_toe() {
                                     "diagonal(Player) :- cell(1, 3, Player) & cell(2, 2, Player) & cell(3, 1, Player)",
                                     "draw() :- ~goal(o) & ~goal(x) & is_full()",
                                     "goal(Player) :- row(Player, 1) | row(Player, 2) | row(Player, 3) | diagonal(Player)",
-                                    "terminal() :- goal(x) | goal(o) | draw()",
+                                    "terminal() :- goal(x) | goal(o) | is_full()",
                                     "goal_first() :- goal(x)",
                                     "goal_last() :- goal(o)",
                                     "does(xplayer, marker(A, B)) :- next(cell(A, B, b), cell(A, B, x))",
@@ -276,10 +297,57 @@ void test_tic_tac_toe() {
                                     "does(oplayer, markers(A, B)) :- next(cell(A, B, b), cell(A, B, o))",
                                     "legal(oplayer, markers(A, B)) :- cell(A, B, b)"
                                     };
-   // generate_zovrist();
-   // predefined_hashed();
-    // for(int i = 0; i < current_file.size(); i++) {
-    //     Functions::process_line_binary(current_file[i]);
+    vector<string> another_version = { "role(xplayer)",
+                                    "role(oplayer)",
+                                    "init(free(1, 1))",
+                                    "init(free(1, 2))",
+                                    "init(free(1, 3))",
+                                    "init(free(2, 1))",
+                                    "init(free(2, 2))",
+                                    "init(free(2, 3))",
+                                    "init(free(3, 1))",
+                                    "init(free(3, 2))",
+                                    "init(free(3, 3))",
+                                    "init(true(a))",
+                                    "row_mark(X) :- mark(X, 1) & mark(X, 2) & mark(X, 3)",
+                                    "row_mark(X) :- mark(1, X) & mark(2, X) & mark(3, X)",
+                                    "row_circle(X) :- circle(X, 1) & circle(X, 2) & circle(X, 3)",
+                                    "row_circle(X) :- circle(1, X) & circle(2, X) & circle(3, X)",
+                                    "row_circle_final(a) :- row_circle(1) | row_circle(2) | row_circle(3)",
+                                    "row_mark_final(a) :- row_mark(1) | row_mark(2) | row_mark(3)",
+                                    "is_f(a) :- free(1, 1) | free(1, 2) | free(1, 3) | free(2, 1) | free(2, 2) | free(2, 3) | free(3, 1) | free(3, 2) | free(3, 3)",
+                                    "is_full(a) :- ~is_f(a)",
+                                    "diagonal_mark(a) :- mark(1, 1) & mark(2, 2) & mark(3, 3)",
+                                    "diagonal_mark(a) :- mark(1, 3) & mark(2, 2) & mark(3, 1)",
+                                    "diagonal_circle(a) :- circle(1, 1) & circle(2, 2) & circle(3, 3)",
+                                    "diagonal_circle(a) :- circle(1, 3) & circle(2, 2) & circle(3, 1)",
+                                    "draw() :- ~goal_mark(a) & ~goal_circle(a) & is_full(a)",
+                                    "terminal(a) :- goal_mark(a) | goal_circle(a) | is_full(a)",
+                                    "goal_mark(a) :- row_mark_final(a) | diagonal_mark(a)",
+                                    "goal_circle(a) :- row_circle_final(a) | diagonal_circle(a)",
+                                    "goal_first(a) :- goal_mark(a)",
+                                    "goal_last(a) :- goal_circle(a)",
+                                    "freeing(A) :- next(mark(A, 1), free(A, 1)) | next(mark(A, 2), free(A, 2)) | next(mark(A, 3), free(A, 3))",
+                                   // "does(xplayer, makefree(A)) :- next(free(A, 1), wall(A, 1)) & next(free(A, 2), wall(A, 2)) & init(first(a))",
+                                   // "legal(xplayer, makefree(A)) :- free(A, 1) & free(A, 2)",
+                                    "does(xplayer, domark(A, B)) :- next(free(A, B), mark(A, B)) & init(first(a))",
+                                    "legal(xplayer, domark(A, B)) :- free(A, B)",
+                                    "does(oplayer, docircle(A, B)) :- next(free(A, B), circle(A, B)) & init(first(a))",
+                                    "legal(oplayer, docircle(A, B)) :- free(A, B)"
+                                    };
+    // generate_zovrist();
+    // predefined_hashed();
+    // for(int i = 0; i < another_version.size(); i++) {
+    //     Functions::process_line_binary(another_version[i]);
     // }
-    simulate_player(current_file, 1);
+    // show_games();
+    // cout << Functions::evaluate_binary("mover(3, 3)") << "\n";
+    // cout << Functions::evaluate_binary("circle(3, 3)") << "\n";
+    // cout << Functions::evaluate_binary("free(3, 3)") << "\n";
+    // cout << Functions::evaluate_binary("circle(1, 1)") << "\n";
+    // cout << Functions::evaluate_binary("free(1, 1)") << "\n";
+    // show_games();
+   // cout << Functions::evaluate_action("domark(1, 1)") << "\n";
+   // cout << Functions::evaluate_binary("mark(1, 1)") << "\n";
+    simulate_player(another_version, 1);
 }

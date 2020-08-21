@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include "expressions.h"
+#include <algorithm>
 using namespace std;
 class Functions {
 public:
@@ -83,6 +84,12 @@ void get_strings(Functions *current_function, vector<string> &constants, int k, 
 void get_binary_strings(int k, vector<unsigned short> &constants, vector<unsigned short> to_modify, vector< vector<unsigned short> > &total_actions);
 void play();
 void simulate_player(vector<string> current_file, int total_matches);
+int bot_action_first(int depth, int max_depth, int alpha, int beta, vector<unsigned short> &constants, vector<unsigned short> &player_names,
+                     unordered_map<unsigned short, unsigned short> &all_maps, vector<unsigned short> &action);
+int bot_action_second(int depth, int max_depth, int alpha, int beta, vector<unsigned short> &constants, vector<unsigned short> &player_names,
+                      unordered_map<unsigned short, unsigned short> &all_maps, vector<unsigned short> &action);
+vector<unsigned short> get_best_action(int max_depth, vector<unsigned short> &constants, vector<unsigned short> &player_name,
+                                        unordered_map<unsigned short, unsigned short> &all_maps, bool player);
 
 //binary_function.cpp
 void predefined_hashed();
@@ -94,3 +101,5 @@ vector< vector<unsigned short> > get_legals(unsigned short name);
 unordered_map<unsigned short, unsigned short> get_legal_maps();
 void save_states();
 void load_states();
+unordered_map<unsigned long long, bool> get_states_inits();
+void copy_current_state(unordered_map<unsigned long long, bool> &t_inits);

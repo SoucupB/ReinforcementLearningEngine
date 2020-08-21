@@ -5,6 +5,8 @@ int mad(int a, int b) {
 }
 vector<string> stated_variables;
 
+vector<unsigned short> final_result;
+
 vector<string> get_total_actions(vector<string*> *actions) {
     vector<string> total_triess;
     unordered_map<string, bool> *mapper = get_map();
@@ -59,15 +61,18 @@ void play() {
 void show_game() {
     for(int i = 0; i < 3; i++) {
         for(int j = 0; j < 3; j++) {
-            int x = Functions::evaluate_binary("cell(" + to_string(i + 1) + ", " + to_string(j + 1) + ", x)");
-            int o = Functions::evaluate_binary("cell(" + to_string(i + 1) + ", " + to_string(j + 1) + ", o)");
-            int b = Functions::evaluate_binary("cell(" + to_string(i + 1) + ", " + to_string(j + 1) + ", b)");
+            int x = Functions::evaluate_binary("mark(" + to_string(i + 1) + ", " + to_string(j + 1) + ")");
+            int o = Functions::evaluate_binary("circle(" + to_string(i + 1) + ", " + to_string(j + 1) + ")");
+            int b = Functions::evaluate_binary("free(" + to_string(i + 1) + ", " + to_string(j + 1) + ")");
+            int z = Functions::evaluate_binary("wall(" + to_string(i + 1) + ", " + to_string(j + 1) + ")");
             if(x)
                 cout << 1 << " ";
             if(o)
                 cout << 2 << " ";
             if(b)
                 cout << 0 << " ";
+            if(z)
+                cout << 3 << " ";
         }
         cout << "\n";
     }
@@ -80,12 +85,13 @@ void simulate_player(vector<string> current_file, int total_matches) {
     for(int i = 0; i < current_file.size(); i++) {
         Functions::process_line_binary(current_file[i]);
     }
+    cout << "Compiled!\n";
     unordered_map<unsigned short, unsigned short> all_maps = get_legal_maps();
     vector<unsigned short> names = get_names();
     vector<unsigned short> constants = get_total_params(), terminal, goal_first, goal_last, draw;
     Functions *first = Functions::get_function("terminal()"),
-              *second = Functions::get_function("goal_first()"),
-              *third = Functions::get_function("goal_last()"),
+              *second = Functions::get_function("goal_first(a)"),
+              *third = Functions::get_function("goal_last(a)"),
               *fourth = Functions::get_function("draw()");
     Functions::transform_into_hash(first, terminal, 0);
     Functions::transform_into_hash(second, goal_first, 0);
@@ -101,18 +107,24 @@ void simulate_player(vector<string> current_file, int total_matches) {
     while(mathces < total_matches) {
         load_states();
         while(!Functions::evaluate_binary(terminal)) {
-            Functions::evaluate_binary(get_random_action(constants, names[0], all_maps));
+          //  cout << get_best_action(9, constants, names, all_maps, 0) << "\n";
+            //Functions::evaluate_binary(get_random_action(constants, names[0], all_maps));
+            Functions::evaluate_binary(get_best_action(9, constants, names, all_maps, 0));
+           // exit(0);
             show_game();
             if(!Functions::evaluate_binary(terminal)) {
-                Functions::evaluate_binary(get_random_action(constants, names[1], all_maps));
+                //Functions::evaluate_binary(get_random_action(constants, names[1], all_maps));
+                Functions::evaluate_binary(get_best_action(9, constants, names, all_maps, 1));
+               // exit(0);
                 show_game();
             }
         }
         if(Functions::evaluate_binary(goal_first))
             f++;
+        else
         if(Functions::evaluate_binary(goal_last))
             s++;
-        if(Functions::evaluate_binary(draw))
+        else
             d++;
         mathces++;
     }
@@ -151,6 +163,102 @@ void get_strings(Functions *current_function, vector<string> &constants, int k, 
             current_function->args[k] = *current_var;
         }
     }
+}
+int max_score = 50, draw_score = 25, min_score = -50;
+
+int get_result_first_bot() {
+    bool result = Functions::evaluate_binary("goal_last(a)");
+    if(result) return min_score;
+    result = Functions::evaluate_binary("draw()");
+    if(result) return draw_score;
+    return 0;
+}
+
+int get_result_second_bot() {
+    bool result = Functions::evaluate_binary("goal_first(a)");
+    if(result) return min_score;
+    result = Functions::evaluate_binary("draw()");
+    if(result) return draw_score;
+    return 0;
+}
+
+int bot_action_first(int depth, int max_depth, int alpha, int beta, vector<unsigned short> &constants, vector<unsigned short> &player_names,
+                     unordered_map<unsigned short, unsigned short> &all_maps, vector<unsigned short> &action) {
+    int game_result = get_result_first_bot();
+    if(game_result)
+        return game_result;
+    if(depth >= max_depth)
+        return 0;
+    int max_score = -1<<30;
+    vector<unsigned short> best_action;
+    vector< vector<unsigned short> > all_actions = get_total_binary_actions(constants, player_names[0], all_maps);
+    random_shuffle ( all_actions.begin(), all_actions.end() );
+    unordered_map<unsigned long long, bool> current_state = get_states_inits();
+    for(int i = 0; i < all_actions.size(); i++) {
+        Functions::evaluate_binary(all_actions[i]);
+        int score = -bot_action_second(depth + 1, max_depth, -beta, -alpha, constants, player_names, all_maps, action);
+        copy_current_state(current_state);
+        if(abs(score) == draw_score)
+            score = draw_score;
+        if(score > max_score) {
+            if(!depth)
+                best_action = all_actions[i];
+            max_score = score;
+        }
+        alpha = max(alpha, score);
+        if(alpha >= beta && depth) {
+            return alpha;
+        }
+    }
+    if(depth == 0) {
+        final_result = best_action;
+    }
+    return max_score;
+}
+
+int bot_action_second(int depth, int max_depth, int alpha, int beta, vector<unsigned short> &constants, vector<unsigned short> &player_names,
+                      unordered_map<unsigned short, unsigned short> &all_maps, vector<unsigned short> &action) {
+    int game_result = get_result_second_bot();
+    if(game_result)
+        return game_result;
+    if(depth >= max_depth)
+        return 0;
+    int max_score = -1<<30;
+    vector<unsigned short> best_action;
+    vector< vector<unsigned short> > all_actions = get_total_binary_actions(constants, player_names[1], all_maps);
+    random_shuffle ( all_actions.begin(), all_actions.end() );
+    unordered_map<unsigned long long, bool> current_state = get_states_inits();
+    for(int i = 0; i < all_actions.size(); i++) {
+        Functions::evaluate_binary(all_actions[i]);
+        int score = -bot_action_first(depth + 1, max_depth, -beta, -alpha, constants, player_names, all_maps, action);
+        copy_current_state(current_state);
+        if(abs(score) == draw_score)
+            score = draw_score;
+        if(score > max_score) {
+            if(!depth)
+                best_action = all_actions[i];
+            max_score = score;
+        }
+        alpha = max(alpha, score);
+        if(alpha >= beta && depth) {
+            return alpha;
+        }
+    }
+    if(depth == 0) {
+        final_result = best_action;
+    }
+    return max_score;
+}
+
+vector<unsigned short> get_best_action(int max_depth, vector<unsigned short> &constants, vector<unsigned short> &player_name,
+                     unordered_map<unsigned short, unsigned short> &all_maps, bool player) {
+    vector<unsigned short> action;
+    int score = 0;
+    if(!player)
+        score = bot_action_first(0, max_depth, -1<<30, 1<<30, constants, player_name, all_maps, action);
+    else
+        score = bot_action_second(0, max_depth, -1<<30, 1<<30, constants, player_name, all_maps, action);
+    return final_result;
 }
 
 string get_random_action_first_player() {

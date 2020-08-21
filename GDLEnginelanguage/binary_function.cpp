@@ -17,6 +17,14 @@ vector<unsigned short> get_total_params() {
     return total_params;
 }
 
+unordered_map<unsigned long long, bool> get_states_inits() {
+    return inits;
+}
+
+void copy_current_state(unordered_map<unsigned long long, bool> &t_inits) {
+    inits = t_inits;
+}
+
 void save_states() {
     c_inits = inits;
 }
@@ -174,24 +182,6 @@ void Functions::process_line_binary(string input) {
     }
     params[init_function[0]].push_back(responser);
     get_message(init_function[0], definition_string);
-    // if(is_legal_or_actions(first_operator) != WRONG)
-    //     c_first_operator = get_function(first_operator->args[1]);
-    // else
-    //     c_first_operator = first_operator;
-    // switch(is_legal_or_actions(first_operator)) {
-    //     case LEGAL:
-    //        // legal[c_first_operator->name].push_back(definition_string);
-    //     //    legal_params[c_first_operator->name].push_back(c_first_operator->args);
-    //         break;
-    //     case ACTION_PREDICATE:
-    //       //  actions[c_first_operator->name].push_back(definition_string);
-    //      //   action_params[c_first_operator->name].push_back(c_first_operator->args);
-    //         break;
-    //     default:
-    //       //  string_definitions[c_first_operator->name].push_back(definition_string);
-    //       //  var_params[c_first_operator->name].push_back(c_first_operator->args);
-    //         break;
-    // }
     return ;
 }
 
