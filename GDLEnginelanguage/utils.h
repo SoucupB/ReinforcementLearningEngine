@@ -29,7 +29,13 @@ enum {
     ROLE,
     NAME,
     OPEN_PARANTH,
-    CLOSE_PARANTH
+    CLOSE_PARANTH,
+    PLUS,
+    MINUS,
+    MULT,
+    DIVISION,
+    SIGN,
+    INTEGER
 };
 
 
@@ -41,6 +47,7 @@ bool is_arithmetic_sign(char element);
 void free_pointer(void **pointer);
 void free_array(vector<vector<string>* > &input);
 string spaces(int depth);
+void remove_spaces(const string &element, int &index);
 int min(int a, int b);
 __int64 get_memory_of_process();
 uint64_t timeSinceEpochMillisec();

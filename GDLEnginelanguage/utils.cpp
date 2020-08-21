@@ -17,6 +17,11 @@ bool is_variable(string input) {
     return false;
 }
 
+void remove_spaces(const string &element, int &index) {
+    while(index < element.size() && element[index] == ' ')
+        index++;
+}
+
 __int64 get_memory_of_process() {
     MEMORYSTATUSEX statex;
     statex.dwLength = sizeof (statex);

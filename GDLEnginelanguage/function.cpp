@@ -10,29 +10,146 @@ unordered_map<string*, bool> first_player_legality, second_player_legality, firs
 vector<string*> first_action_names, second_action_names;
 unordered_map<string, bool> *inits_vars = new unordered_map<string, bool>;
 unordered_map<int, string> hash_mapper;
+unordered_map<unsigned short, int> integers_hash;
+unordered_map<unsigned short, vector<unsigned short> > total_expressions;
+bool total_expression[1<<16];
+
+int get_sign_from_char(char a) {
+    if(a == '+')
+        return PLUS;
+    if(a == '-')
+        return MINUS;
+    if(a == '*')
+        return MULT;
+    if(a == '/')
+        return DIVISION;
+    return WRONG;
+}
+
+int get_hash_integers(unsigned char integer_label) {
+    return integers_hash[integer_label];
+}
+
+bool is_expression(unsigned short label) {
+    return total_expression[label];
+}
+
+char get_char_from_sign(int a) {
+    if(a == PLUS)
+        return '+';
+    if(a == MINUS)
+        return '-';
+    if(a == MULT)
+        return '*';
+    if(a == DIVISION)
+        return '/';
+    return '@';
+}
+
+void show_expression(unsigned short label) {
+    vector<unsigned short> response = total_expressions[label];
+    for(int i = 0; i < response.size(); i++)
+        cout << get_hash(response[i]) << " ";
+}
+
+void add_expression(string element, unsigned short label) {
+    int index = 0;
+    vector<unsigned short> expression;
+    while(index < element.size()) {
+        string argument = "";
+        while(index < element.size() && (isdigit(element[index]) || isalpha(element[index]))) {
+            argument += element[index];
+            index++;
+        }
+        if(is_integer(argument)) {
+            unsigned short number = hasher_number(stoi(argument)) + params_offset * 6;
+            expression.push_back(number);
+            integers_hash[number] = stoi(argument);
+        }
+        else
+            expression.push_back(hasher(argument) + params_offset);
+        if(index < element.size() && (element[index] == '+' || element[index] == '-' | element[index] == '*' | element[index] == '/')) {
+            expression.push_back(get_sign_from_char(element[index]) + params_offset * 4);
+            index++;
+        }
+    }
+    total_expressions[label] = expression;
+    total_expression[label] = 1;
+}
+
+vector<unsigned short> get_expression_from_label(unsigned short label) {
+    return total_expressions[label];
+}
 
 int hasher(string elem) {
-    int element = std::hash<std::string>()(elem) % 1024;
+    int element = std::hash<std::string>()(elem) % params_offset;
     while(hash_mapper[element].size()) {
         if(hash_mapper[element] == elem)
             return element;
-        element = (element + 3) % 1024;
+        element = (element + 3) % params_offset;
     }
     hash_mapper[element] = elem;
     return element;
 }
 
-string get_hash(int number) {
-    if(number < 1024)
-        return hash_mapper[number];
-    if(number < 1024 * 2)
-        return hash_mapper[number - 1024];
-    if(number < 1024 * 3)
-        return hash_mapper[number - 1024 * 2];
-    if(number < 1024 * 4)
-        return hash_mapper[number - 1024 * 3];
-    return hash_mapper[number - 1024 * 4];
+int hasher_number(int elem) {
+    int element = elem % params_offset;
+    while(integers_hash[element]) {
+        if(integers_hash[element] == elem)
+            return element;
+        element = (element + 3) % params_offset;
+    }
+    integers_hash[element] = elem;
+    return element;
 }
+
+string get_hash(int number) {
+    if(number < params_offset)
+        return hash_mapper[number];
+    if(number < params_offset * 2)
+        return hash_mapper[number - params_offset];
+    if(number < params_offset * 3)
+        return hash_mapper[number - params_offset * 2];
+    if(number < params_offset * 4)
+        return hash_mapper[number - params_offset * 3];
+    if(number < params_offset * 5)
+        return string(1, get_char_from_sign(number - params_offset * 4));
+    return to_string(get_hash_integers(number));
+}
+
+// void Functions::transform_into_hash(Functions *funct, vector<unsigned short> &buffer, int offset) {
+//     offset = buffer.size();
+//     int initial_offset = offset;
+//     buffer.push_back(hasher(funct->name));
+//     buffer.push_back(0);
+//     int start_offset = offset + 1;
+//     buffer.push_back(funct->args.size());
+//     offset += 3;
+//     for(int i = 0; i < funct->args.size(); i++) {
+//         if(funct->argument_types[i] == PREDICATE) {
+//             Functions *child = get_function(funct->args[i]);
+//             transform_into_hash(child, buffer, offset);
+//             free_mem(child);
+//             offset += buffer[offset + 1];
+//         } else
+//         if(funct->argument_types[i] == VARIABLE) {
+//             buffer.push_back(hasher(funct->args[i]) + 1024);
+//             offset++;
+//         } else
+//         if(funct->argument_types[i] == NUMBER) {
+//             buffer.push_back(hasher_number(stoi(funct->args[i])) + 1024 * 2);
+//             offset++;
+//         } else
+//         if(funct->argument_types[i] == CONSTANT) {
+//             buffer.push_back(hasher(funct->args[i]) + 1024 * 3);
+//             offset++;
+//         }
+//     }
+//     buffer[start_offset] = offset - initial_offset;
+//     for(int i = 0; i < buffer.size(); i++)
+//         cout << get_hash(buffer[i]) << " ";
+//     exit(0);
+// }
 
 void Functions::transform_into_hash(Functions *funct, vector<unsigned short> &buffer, int offset) {
     offset = buffer.size();
@@ -50,22 +167,20 @@ void Functions::transform_into_hash(Functions *funct, vector<unsigned short> &bu
             offset += buffer[offset + 1];
         } else
         if(funct->argument_types[i] == VARIABLE) {
-            buffer.push_back(hasher(funct->args[i]) + 1024);
+            buffer.push_back(hasher(funct->args[i]) + params_offset);
+            add_expression(funct->args[i], hasher(funct->args[i]) + params_offset);
             offset++;
         } else
         if(funct->argument_types[i] == NUMBER) {
-            buffer.push_back(hasher(funct->args[i]) + 1024 * 2);
+            buffer.push_back(hasher_number(stoi(funct->args[i])) + params_offset * 6);
             offset++;
         } else
         if(funct->argument_types[i] == CONSTANT) {
-            buffer.push_back(hasher(funct->args[i]) + 1024 * 3);
+            buffer.push_back(hasher(funct->args[i]) + params_offset * 3);
             offset++;
         }
     }
     buffer[start_offset] = offset - initial_offset;
-    // for(int i = 0; i < buffer.size(); i++)
-    //     cout << buffer[i] << " ";
-    // cout << "\n";
 }
 
 void function_describer(vector<unsigned short> &buffer, int offset, int depth) {
@@ -91,13 +206,17 @@ void function_describer(vector<unsigned short> &buffer, int offset, int depth) {
 }
 
 int get_type(short number) {
-    if(number < 1024)
+    if(number < params_offset)
         return PREDICATE;
-    if(number < 1024 * 2)
+    if(number < params_offset * 2)
         return VARIABLE;
-    if(number < 1024 * 3)
-        return NUMBER;
-    return CONSTANT;
+  //  if(number < params_offset * 3)
+  //      return NUMBER;
+    if(number < params_offset * 4)
+        return CONSTANT;
+    if(number < params_offset * 5)
+        return SIGN;
+    return NUMBER;
 }
 
 void reserve_arrays() {
@@ -147,7 +266,7 @@ Functions *Functions::get_function(const string &funct) {
     int index = 0;
     Functions *response = get_function_object(funct, index);
     if(index < (int)funct.size() - 1 && !funct.size()) {
-        free(response);
+        Functions::free_mem(response);
         return NULL;
     }
     response->add_function_type();
@@ -187,11 +306,13 @@ Functions *Functions::get_function_object(const string &input, int &index) {
         string current_arg = get_simple_arguments(input, index);
         if(current_arg == "")
             return function;
-        if(input[index] != ',' && input[index] != ')')
+        if(index >= input.size() || (input[index] != ',' && input[index] != ')'))
             return NULL;
         function->args.push_back(current_arg);
         function->argument_types.push_back(argument_types_function(current_arg));
+
     }
+
     if(index == input.size())
         return NULL;
     if(input[index] != ')') {
@@ -220,16 +341,16 @@ string Functions::get_function_argument(const string &input, int &index) {
         if(current_argument == "")
             return "";
         response += current_argument;
-        if(input[index] != ',' && input[index] != ')')
+        if(index >= input.size() || (input[index] != ',' && input[index] != ')'))
             return "";
-        if(input[index] == ',' )
+        if(index < input.size() && input[index] == ',' )
             response += ", ";
-        if(input[index] == ')' )
+        if(index < input.size() && input[index] == ')' )
             response += ")";
     }
     if(index == input.size())
         return "";
-    if(input[index] != ')') {
+    if(index >= input.size() || input[index] != ')') {
         return "";
     }
     return response;
@@ -266,7 +387,7 @@ bool Functions::is_function(const string &input) {
 int Functions::argument_types_function(string &argument) {
     if(is_integer(argument))
         return NUMBER;
-    if(is_variable(argument))
+    if(is_variable(argument) || is_expression(argument))
         return VARIABLE;
     if(is_function_var(argument))
         return PREDICATE;

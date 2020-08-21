@@ -191,7 +191,11 @@ bool search_inits_binary(vector<unsigned short> &hash_vector, int l, int r) {
 }
 
 unsigned short get_sign(unsigned short sign) {
-    return sign + 1024 * 4;
+    return sign + params_offset * 4;
+}
+
+unsigned short get_sign_from_integer(unsigned short sign) {
+    return sign - params_offset * 4;
 }
 
 vector< vector<unsigned short> > get_clossest_function(vector<unsigned short> &param, int start_offset) {
@@ -219,6 +223,30 @@ unordered_map<unsigned short, unsigned short> get_equalizer(vector<unsigned shor
     return response;
 }
 
+unsigned short get_current_element(unsigned short label, unordered_map<unsigned short, unsigned short> &mapper) {
+    if(mapper[label])
+        return get_hash_integers(mapper[label]);
+    return get_hash_integers(label);
+}
+
+unsigned short get_expression_result(unsigned short label, unordered_map<unsigned short, unsigned short> &mapper) {
+    vector<unsigned short> get_responser = get_expression_from_label(label);
+    int element = get_current_element(get_responser[0], mapper);
+    int index = 1;
+    while(index < get_responser.size() && (get_sign_from_integer(get_responser[index]) == PLUS || get_sign_from_integer(get_responser[index]) == MINUS)) {
+        if(get_sign_from_integer(get_responser[index]) == PLUS) {
+            index++;
+            element += get_current_element(get_responser[index], mapper);
+        } else
+        if(get_sign_from_integer(get_responser[index]) == MINUS) {
+            index++;
+            element -= get_current_element(get_responser[index], mapper);
+        }
+        index++;
+    }
+    return hasher_number(element) + 6 * params_offset;
+}
+
 vector<unsigned short> get_expression(vector<unsigned short> &def, int &index, unordered_map<unsigned short, unsigned short> &mapper) {
     vector<unsigned short> response;
     response.reserve(128);
@@ -228,12 +256,26 @@ vector<unsigned short> get_expression(vector<unsigned short> &def, int &index, u
     }
     int total_size = def[index + 1];
     for(int i = 0; i < total_size; i++) {
+
         if(mapper[def[i + index]])
             response.push_back(mapper[def[i + index]]);
-        else
-            response.push_back(def[i + index]);
+        else {
+            if(is_expression(def[i + index])) {
+                unsigned short get_responser = get_expression_result(def[i + index], mapper);
+                response.push_back(get_expression_result(def[i + index], mapper));
+            }
+            else
+                response.push_back(def[i + index]);
+        }
+        // if(mapper[def[i + index]])
+        //     response.push_back(mapper[def[i + index]]);
+        // else
+        //     response.push_back(def[i + index]);
     }
     index += total_size;
+    // for(int i = 0; i < response.size(); i++)
+    //     cout << get_hash(response[i]) << " ";
+    // exit(0);
     return response;
 }
 
@@ -321,8 +363,9 @@ bool Functions::evaluate_binary_vector(vector<unsigned short> param) {
     if(is_special_func_runner(param)) {
         return negation ^ process_special_function_run(param);
     }
-  //  for(int i = 0; i < param.size(); i++)
-  //      cout << param[i] << " ";
+   // for(int i = 0; i < param.size(); i++)
+   //     cout << get_hash(param[i]) << " ";
+   // cout << "\n";
   //  exit(0);
     // for(int i = 0; i < param.size(); i++) {
     //     if(param[i] == get_sign(NOT))

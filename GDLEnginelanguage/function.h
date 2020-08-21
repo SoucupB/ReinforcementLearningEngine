@@ -8,6 +8,7 @@
 #include "expressions.h"
 #include <algorithm>
 using namespace std;
+#define params_offset 1024
 class Functions {
 public:
     string name;
@@ -72,7 +73,11 @@ int hasher(string elem);
 int get_type(short number);
 void function_describer(vector<unsigned short> &buffer, int offset, int depth);
 string get_hash(int number);
-
+int hasher_number(int elem);
+void add_expression(string element, unsigned short label);
+bool is_expression(unsigned short label);
+vector<unsigned short> get_expression_from_label(unsigned short label);
+int get_hash_integers(unsigned char integer_label);
 
 
 //trainer.cpp
@@ -103,3 +108,4 @@ void save_states();
 void load_states();
 unordered_map<unsigned long long, bool> get_states_inits();
 void copy_current_state(unordered_map<unsigned long long, bool> &t_inits);
+unsigned short get_sign_from_integer(unsigned short sign);

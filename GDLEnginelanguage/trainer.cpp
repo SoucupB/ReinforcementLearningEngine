@@ -79,6 +79,27 @@ void show_game() {
     cout << "\n";
 }
 
+void show_game_two() {
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+            int x = Functions::evaluate_binary("mark(" + to_string(i * 3 + j + 1) + ")");
+            int o = Functions::evaluate_binary("circle(" + to_string(i * 3 + j + 1) + ")");
+            int b = Functions::evaluate_binary("free(" + to_string(i * 3 + j + 1) + ")");
+            int z = Functions::evaluate_binary("wall(" + to_string(i * 3 + j + 1) + ")");
+            if(x)
+                cout << 1 << " ";
+            if(o)
+                cout << 2 << " ";
+            if(b)
+                cout << 0 << " ";
+            if(z)
+                cout << 3 << " ";
+        }
+        cout << "\n";
+    }
+    cout << "\n";
+}
+
 void simulate_player(vector<string> current_file, int total_matches) {
     generate_zovrist();
     predefined_hashed();
@@ -90,8 +111,8 @@ void simulate_player(vector<string> current_file, int total_matches) {
     vector<unsigned short> names = get_names();
     vector<unsigned short> constants = get_total_params(), terminal, goal_first, goal_last, draw;
     Functions *first = Functions::get_function("terminal()"),
-              *second = Functions::get_function("goal_first(a)"),
-              *third = Functions::get_function("goal_last(a)"),
+              *second = Functions::get_function("goal_first()"),
+              *third = Functions::get_function("goal_last()"),
               *fourth = Functions::get_function("draw()");
     Functions::transform_into_hash(first, terminal, 0);
     Functions::transform_into_hash(second, goal_first, 0);
@@ -111,12 +132,12 @@ void simulate_player(vector<string> current_file, int total_matches) {
             //Functions::evaluate_binary(get_random_action(constants, names[0], all_maps));
             Functions::evaluate_binary(get_best_action(9, constants, names, all_maps, 0));
            // exit(0);
-            show_game();
+            show_game_two();
             if(!Functions::evaluate_binary(terminal)) {
                 //Functions::evaluate_binary(get_random_action(constants, names[1], all_maps));
                 Functions::evaluate_binary(get_best_action(9, constants, names, all_maps, 1));
                // exit(0);
-                show_game();
+                show_game_two();
             }
         }
         if(Functions::evaluate_binary(goal_first))

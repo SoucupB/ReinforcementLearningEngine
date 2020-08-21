@@ -11,6 +11,8 @@ int second_degree_operation(const string &, int&);
 int get_number(const string &, int , int);
 int evaluate(const string &);
 void int_to_char(const string &, int , int );
+bool is_predicate_or_number(const string &input, int &index);
+bool is_expression(const string &input);
 
 
 
