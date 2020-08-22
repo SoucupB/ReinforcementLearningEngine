@@ -20,5 +20,7 @@ int main() {
    // test_manager("test_tic_tac");
    // test_manager("test_speed_old");
    // test_manager("test_speed_new");
-    test_manager("test_number_params");
+   // test_manager("test_number_params");
+    //test_manager("test_boat_game");
+    test_manager("test_4_in_line");
 }

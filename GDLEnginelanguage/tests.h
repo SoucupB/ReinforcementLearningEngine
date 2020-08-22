@@ -19,3 +19,5 @@ void test_speed_comparison(int);
 void test_special_functions_function();
 void test_tic_tac_toe();
 void test_numbers_params_function();
+void test_boat_game();
+void test_4_in_line();

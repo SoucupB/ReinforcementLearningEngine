@@ -100,6 +100,27 @@ void show_game_two() {
     cout << "\n";
 }
 
+void show_connect_four() {
+    for(int i = 0; i < 6; i++) {
+        for(int j = 0; j < 7; j++) {
+            int x = Functions::evaluate_binary("mark(" + to_string(i + 1) + ", " + to_string(j + 1) + ")");
+            int o = Functions::evaluate_binary("circle(" + to_string(i + 1) + ", " + to_string(j + 1) + ")");
+            int b = Functions::evaluate_binary("free(" + to_string(i + 1) + ", " + to_string(j + 1) + ")");
+            int z = Functions::evaluate_binary("wall(" + to_string(i + 1) + ", " + to_string(j + 1) + ")");
+            if(x)
+                cout << 1 << " ";
+            if(o)
+                cout << 2 << " ";
+            if(b)
+                cout << 0 << " ";
+            if(z)
+                cout << 3 << " ";
+        }
+        cout << "\n";
+    }
+    cout << "\n";
+}
+
 void simulate_player(vector<string> current_file, int total_matches) {
     generate_zovrist();
     predefined_hashed();
@@ -129,15 +150,15 @@ void simulate_player(vector<string> current_file, int total_matches) {
         load_states();
         while(!Functions::evaluate_binary(terminal)) {
           //  cout << get_best_action(9, constants, names, all_maps, 0) << "\n";
-            //Functions::evaluate_binary(get_random_action(constants, names[0], all_maps));
+           // Functions::evaluate_binary(get_random_action(constants, names[0], all_maps));
             Functions::evaluate_binary(get_best_action(9, constants, names, all_maps, 0));
            // exit(0);
-            show_game_two();
+            show_connect_four();
             if(!Functions::evaluate_binary(terminal)) {
-                //Functions::evaluate_binary(get_random_action(constants, names[1], all_maps));
+               // Functions::evaluate_binary(get_random_action(constants, names[1], all_maps));
                 Functions::evaluate_binary(get_best_action(9, constants, names, all_maps, 1));
                // exit(0);
-                show_game_two();
+                show_connect_four();
             }
         }
         if(Functions::evaluate_binary(goal_first))
